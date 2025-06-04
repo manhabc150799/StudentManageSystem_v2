@@ -82,6 +82,8 @@ public class Main {
         
         
         readcreditSubjectsFromExcel("C:\\Users\\LENOVO\\Downloads\\Subject.xlsx");
+        ExcelUtil.readClassSectionsFromExcel("C:\\Users\\LENOVO\\Downloads\\ClassSections.xlsx");
+        ExcelUtil.readStudentsFromExcel("C:\\Users\\LENOVO\\Downloads\\Students.xlsx");
         for(Subject sub : creditSubjects) {
         	System.out.println(sub.toString());
         }

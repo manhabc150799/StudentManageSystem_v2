@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
+import java.io.IOException;
+import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -19,7 +21,7 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
-	
+
 
 public class Manager extends User {
 
@@ -28,28 +30,60 @@ public class Manager extends User {
 	private List<Student> students;
 
 	public static List<ClassSection> classSections;
-	
-	
+
+	/** Path to the exported Excel file in the user's Downloads directory */
+	public static final String CLASS_SECTION_EXCEL_PATH =
+			System.getProperty("user.home") + File.separator +
+					"Downloads" + File.separator + "ClassSections.xlsx";
+
+	/** Path to export the student list */
+	public static final String STUDENT_EXCEL_PATH =
+			System.getProperty("user.home") + File.separator +
+					"Downloads" + File.separator + "Students.xlsx";
+
 
 	public Manager(String userId, String email, String password,String fullName, String role, boolean status, String dob,
-			String managerId) {
+				   String managerId) {
 		super(userId, email, password,fullName, role, status, dob);
 		this.managerId = managerId;
-		this.students = new ArrayList<Student>();
-		this.students.addAll(Main.creditStudents);
-	    this.students.addAll(Main.yearBasedStudents);
-	    System.out.println(this.students.size());
-		Manager.classSections = new ArrayList<ClassSection>();
+		this.students = new ArrayList<>();
+
+		try {
+			Manager.classSections = ExcelUtil.readClassSectionsFromExcel(CLASS_SECTION_EXCEL_PATH);
+			this.students = ExcelUtil.readStudentsFromExcel(STUDENT_EXCEL_PATH);
+
+			// if there are no students in Excel fallback to defaults and export
+			if (this.students.isEmpty()) {
+				this.students.addAll(Main.creditStudents);
+				this.students.addAll(Main.yearBasedStudents);
+			}
+
+			ExcelUtil.writeStudentsToExcel(this.students, STUDENT_EXCEL_PATH);
+		} catch (IOException ex) {
+			System.err.println("Failed to load data from Excel: " + ex.getMessage());
+			Manager.classSections = new ArrayList<>();
+		}
 	}
 
 	public void viewListStudent() {
 		students.sort(Comparator.comparing(Student::getFullName));
-        System.out.printf("%-5s %-20s %-15s %-20s %-10s\n", "STT", "Tên sinh viên", "Mã SV", "Chuyên ngành", "Trạng thái");
+		System.out.printf("%-5s %-10s %-25s %-15s %-20s %-18s %-12s %-15s\n",
+				"STT", "UserID", "Email", "Password", "Full Name", "Role",
+				"Student ID", "Major");
         for (int i = 0; i < students.size(); i++) {
             Student student = students.get(i);
-            System.out.printf("%-5d %-20s %-15s %-20s %-10s\n", i + 1, student.getFullName(), student.studentId,
-                    student.major, student.isStatus() ? "Active" : "Inactive");
-        }
+			String role = (student instanceof CreditStudent) ? "CreditStudent" :
+					(student instanceof YearBasedStudent) ? "YearBasedStudent" : student.getRole();
+			System.out.printf("%-5d %-10s %-25s %-15s %-20s %-18s %-12s %-15s\n",
+					i + 1,
+					student.getUserId(),
+					student.getEmail(),
+					student.getPassword(),
+					student.getFullName(),
+					role,
+					student.studentId,
+					student.major);
+		}
 	}
 
 	public void addClassSection() {
@@ -59,7 +93,7 @@ public class Manager extends User {
 	        String classSectionId = scanner.nextLine();
 	        System.out.print("Enter Subject Name: ");
 	        String subjectName = scanner.nextLine();
-	        
+
 	        Subject subject = Main.creditSubjects.stream()
 	                .filter(s -> s.subjectName.equalsIgnoreCase(subjectName))
 	                .findFirst()
@@ -104,24 +138,32 @@ public class Manager extends User {
 
 	        if (duplicate) {
 	            System.out.println("Class Section ID already exists. Please try again.");
-	        } else {
-	            ClassSection newClassSection = new ClassSection(classSectionId, subject, semester, lecturer, maxStudents, schedules);
-	            classSections.add(newClassSection);
-	            System.out.println("Class Section added successfully.");
-	        }
-	        
+			} else {
+				ClassSection newClassSection = new ClassSection(classSectionId, subject, semester, lecturer, maxStudents, schedules);
+				classSections.add(newClassSection);
+				try {
+					ExcelUtil.writeClassSectionsToExcel(classSections, CLASS_SECTION_EXCEL_PATH);
+				} catch (IOException ex) {
+					System.err.println("Failed to save to Excel: " + ex.getMessage());
+				}
+				System.out.println("Class Section added successfully.");
+			}
+
 	        scanner.close();
 	}
-	
-	public void syncWithExcel() {
-        // Placeholder for ExcelUtil integration
-        System.out.println("Syncing with Excel...");
-        // Read/write logic using ExcelUtil
-    }
-	
-	
 
-	
+	public void syncWithExcel() {
+		try {
+			Manager.classSections = ExcelUtil.readClassSectionsFromExcel(CLASS_SECTION_EXCEL_PATH);
+			this.students = ExcelUtil.readStudentsFromExcel(STUDENT_EXCEL_PATH);
+		} catch (IOException ex) {
+			System.err.println("Failed to sync with Excel: " + ex.getMessage());
+		}
+	}
+
+
+
+
 	//Getters and Setters
 
 	public String getManagerId() {
@@ -139,7 +181,7 @@ public class Manager extends User {
 	public void setStudents(List<Student> students) {
 		this.students = students;
 	}
-	
+
 }
 
 
@@ -147,7 +189,7 @@ class ManagerPanel extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JTable studentTable;
 	private DefaultTableModel studentTableModel;
-	
+
 	// Model for the registered class table
 	DefaultTableModel classSectionTableModel;
 
@@ -156,7 +198,7 @@ class ManagerPanel extends JFrame {
 
 
     public ManagerPanel(Manager manager) {
-    	
+
     	setTitle("Manager Panel");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -178,38 +220,38 @@ class ManagerPanel extends JFrame {
         // Content panel
         JPanel contentPanel = new JPanel(new CardLayout());
 
-        // View Students content	
+        // View Students content
         JPanel studentPanel = new JPanel(new BorderLayout());
-        
+
         // Khởi tạo JTable và JScrollPane
-        String[] columnNames = {"STT", "Họ và tên", "Mã sinh viên", "Ngành học", "Trạng thái"};
+		String[] columnNames = {"STT", "UserID", "Email", "Password", "Full Name", "Role", "Student ID", "Major"};
         studentTableModel = new DefaultTableModel(columnNames, 0);
-        studentTable = new JTable(studentTableModel);  
-        
+		studentTable = new JTable(studentTableModel);
+
         refreshStudentTable(manager.getStudents());
         studentTable.setModel(studentTableModel);
         studentPanel.add(new JScrollPane(studentTable), BorderLayout.CENTER);
-        
+
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> refreshStudentTable(manager.getStudents()));
         studentPanel.add(refreshButton, BorderLayout.SOUTH);
-        
+
         contentPanel.add(studentPanel, "View Student List");
-       
+
         // View Class Section contents
     	JPanel classSectionPanel = new JPanel(new BorderLayout());
-    	
-    	
+
+
     	//Initital
     	String[] column2Names = {"STT", "Mã lớp", "Mã môn học", "Tên môn học", "Thời khóa biểu", "SL tối đa", "SL đăng ký"};
         classSectionTableModel = new DefaultTableModel(column2Names, 0);
         classSectionTable = new JTable(classSectionTableModel);
         classSectionPanel.add(new JScrollPane(classSectionTable), BorderLayout.CENTER);
-        
+
         JButton refresh2Button = new JButton("Refresh");
         refresh2Button.addActionListener(e -> refreshClassSectionTable());
         classSectionPanel.add(refresh2Button, BorderLayout.SOUTH);
-        
+
         contentPanel.add(classSectionPanel, "Class Section");
 
         mainPanel.add(contentPanel, BorderLayout.CENTER);
@@ -217,8 +259,8 @@ class ManagerPanel extends JFrame {
         // Add action listeners for buttons
         viewStudentsButton.addActionListener(e -> {
         	((CardLayout) contentPanel.getLayout()).show(contentPanel, "View Student List");
-        	
-        	
+
+
         });
         viewClassSectionButton.addActionListener(e -> {
             ((CardLayout) contentPanel.getLayout()).show(contentPanel, "Class Section");
@@ -230,15 +272,15 @@ class ManagerPanel extends JFrame {
         add(mainPanel);
         setVisible(true);
     }
-    
-    
+
+
     private void showAddClassSectionDialog(Manager manager) {
     	  // Create a new JDialog for adding a Class Section
     	  JDialog classSectionDialog = new JDialog(this, "Add Class Section", ModalityType.MODELESS);
     	  classSectionDialog.setSize(500, 700);
     	  classSectionDialog.setLayout(new GridLayout(0, 2));
 
-    	  // Input fields	
+    	  // Input fields
     	  JLabel idLabel = new JLabel("Class Section ID:");
     	  JTextField idField = new JTextField();
     	  JLabel subjectLabel = new JLabel("Subject:");
@@ -332,15 +374,20 @@ class ManagerPanel extends JFrame {
 
     	      if (duplicate) {
     	          JOptionPane.showMessageDialog(classSectionDialog, "Class Section ID already exists!");
-    	      } else {
-    	          ClassSection newClassSection = new ClassSection(
-    	              classSectionId, selectedSubject, semester, lecturer, maxStudents, schedules
-    	          );
-    	          Manager.classSections.add(newClassSection);
-    	          JOptionPane.showMessageDialog(classSectionDialog, "Class Section added successfully!");
+			  } else {
+				  ClassSection newClassSection = new ClassSection(
+						  classSectionId, selectedSubject, semester, lecturer, maxStudents, schedules
+				  );
+				  Manager.classSections.add(newClassSection);
+				  try {
+					  ExcelUtil.writeClassSectionsToExcel(Manager.classSections, Manager.CLASS_SECTION_EXCEL_PATH);
+				  } catch (IOException ex) {
+					  System.err.println("Failed to save to Excel: " + ex.getMessage());
+				  }
+				  JOptionPane.showMessageDialog(classSectionDialog, "Class Section added successfully!");
 
-    	          classSectionDialog.dispose();
-    	      }
+				  classSectionDialog.dispose();
+			  }
     	  });
 
     	  // Add components to the dialog
@@ -361,8 +408,8 @@ class ManagerPanel extends JFrame {
 
     	  classSectionDialog.setVisible(true);
     	}
-    
-    
+
+
     //Get Schedule Text
     private String getScheduleText(List<Schedule> schedules) {
         StringBuilder scheduleText = new StringBuilder();
@@ -389,13 +436,13 @@ class ManagerPanel extends JFrame {
         }
         return scheduleText.toString();
     }
-    
+
  // Optional method to decide if schedules should be sorted (modify as needed)
     private boolean shouldSortSchedules(List<Schedule> schedules) {
         // Example: Sort if there are more than 2 schedules
         return schedules.size() > 2;
     }
-    
+
     //Refresh ClassSection Table
     public void refreshClassSectionTable() {
         try {
@@ -430,9 +477,9 @@ class ManagerPanel extends JFrame {
             System.err.println("Error refreshing class section table: " + ex.getMessage());
         }
     }
-    
-    
-    
+
+
+
     // Refresh Student Table
     public void refreshStudentTable(List<Student> students) {
         try {
@@ -449,32 +496,43 @@ class ManagerPanel extends JFrame {
             // Thêm dữ liệu mới
             int count = 1;
             for (Student student : students) {
+				String role = (student instanceof CreditStudent) ? "CreditStudent" :
+						(student instanceof YearBasedStudent) ? "YearBasedStudent" : student.getRole();
                 studentTableModel.addRow(new Object[]{
                     count++,
+						student.getUserId(),
+						student.getEmail(),
+						student.getPassword(),
                     student.getFullName(),
+						role,
                     student.studentId,
                     student.major,
-                    student.isStatus() ? "Active" : "Inactive"
                 });
             }
-            
+
             studentTable.setModel(studentTableModel);
-            
+
             // Cập nhật lại giao diện bảng
             studentTableModel.fireTableDataChanged();
+
+			try {
+				ExcelUtil.writeStudentsToExcel(students, Manager.STUDENT_EXCEL_PATH);
+			} catch (IOException ex) {
+				System.err.println("Failed to export students to Excel: " + ex.getMessage());
+			}
         } catch (Exception ex) {
             // Xử lý lỗi nếu có
             System.err.println("Error refreshing student table: " + ex.getMessage());
         }
     }
-    
+
     public List<Subject> getAvailableSubjects() {
         List<Subject> availableSubjects = new ArrayList<>();
         availableSubjects.addAll(Main.creditSubjects);
         availableSubjects.addAll(Main.fixedSubjects);
         return availableSubjects;
     }
-    
+
     public Subject findSubjectByName(String subjectName) {
         return Main.creditSubjects.stream()
                 .filter(s -> s.subjectName.equalsIgnoreCase(subjectName))
