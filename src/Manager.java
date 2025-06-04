@@ -198,6 +198,10 @@ class ManagerPanel extends JFrame {
 
     public ManagerPanel(Manager manager) {
 
+		// Sync the latest data from Excel when opening the panel
+		manager.syncWithExcel();
+
+
     	setTitle("Manager Panel");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -257,11 +261,15 @@ class ManagerPanel extends JFrame {
 
         // Add action listeners for buttons
         viewStudentsButton.addActionListener(e -> {
-        	((CardLayout) contentPanel.getLayout()).show(contentPanel, "View Student List");
-
-
+			// Keep student list synchronized and refreshed whenever opened
+			manager.syncWithExcel();
+			refreshStudentTable(manager.getStudents());
+			((CardLayout) contentPanel.getLayout()).show(contentPanel, "View Student List");
         });
         viewClassSectionButton.addActionListener(e -> {
+			// Ensure class sections show latest data each time
+			manager.syncWithExcel();
+			refreshClassSectionTable();
             ((CardLayout) contentPanel.getLayout()).show(contentPanel, "Class Section");
           });
         addClassSectionButton.addActionListener(e -> {
