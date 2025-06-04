@@ -77,15 +77,23 @@ public class Main {
         
         ArrayList<User> users = new ArrayList<>();
         users.add(new Manager("M01", "1", "1", "Admin", "Manager", true, "1980-01-01", "MG123"));
-        users.add(new CreditStudent("S01", "student@example.com", "password", "Student A", "Student", true, "2001-01-01", "ST123","Information Technology"));
         users.add(new Lecturer("L01", "lecturer@example.com", "password", "Lecturer B", "Lecturer", true, "1975-03-21","LT01", "KCNTT"));
         
         
         readcreditSubjectsFromExcel("C:\\Users\\LENOVO\\Downloads\\Subject.xlsx");
         ExcelUtil.readClassSectionsFromExcel("C:\\Users\\LENOVO\\Downloads\\ClassSections.xlsx");
-        ExcelUtil.readStudentsFromExcel("C:\\Users\\LENOVO\\Downloads\\Students.xlsx");
+        // Load students from Excel and add them to the system
+        java.util.List<Student> students = ExcelUtil.readStudentsFromExcel(Manager.STUDENT_EXCEL_PATH);
+        for (Student s : students) {
+            users.add(s);
+            if (s instanceof CreditStudent) {
+                creditStudents.add((CreditStudent) s);
+            } else if (s instanceof YearBasedStudent) {
+                yearBasedStudents.add((YearBasedStudent) s);
+            }
+        }
         for(Subject sub : creditSubjects) {
-        	System.out.println(sub.toString());
+        	    System.out.println(sub.toString());
         }
         
      // Gọi phương thức hiển thị giao diện đăng nhập
@@ -130,17 +138,22 @@ public class Main {
                     // Đóng màn hình đăng nhập
                     // Hiển thị màn hình chính
                     switch (user.getRole().toLowerCase()) {
-                    case "manager":
-                        SwingUtilities.invokeLater(() -> new ManagerPanel((Manager) user));
-                  
-                        break;
-                    case "student":
-                    case "lecturer":
-                        SwingUtilities.invokeLater(() -> showMainScreen());
-                        break;
-                    default:
-                        JOptionPane.showMessageDialog(null, "Role không hợp lệ!", "Error", JOptionPane.ERROR_MESSAGE);
-                }
+                        case "manager":
+                            SwingUtilities.invokeLater(() -> new ManagerPanel((Manager) user));
+                            break;
+                        case "lecturer":
+                            SwingUtilities.invokeLater(() -> showMainScreen());
+                            break;
+                        case "student":
+                        case "creditstudent":
+                            SwingUtilities.invokeLater(() -> new StudentPanel((Student) user));
+                            break;
+                        case "yearbasedstudent":
+                            SwingUtilities.invokeLater(() -> new StudentPanel((Student) user));
+                            break;
+                        default:
+                            JOptionPane.showMessageDialog(null, "Role không hợp lệ!", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 } else {
                     messageLabel.setText("Sai email hoặc mật khẩu!");
                     messageLabel.setForeground(Color.RED);

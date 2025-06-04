@@ -151,8 +151,10 @@ public class ExcelUtil {
         header.createCell(2).setCellValue("Password");
         header.createCell(3).setCellValue("Full Name");
         header.createCell(4).setCellValue("Role");
-        header.createCell(5).setCellValue("Student ID");
-        header.createCell(6).setCellValue("Major");
+        header.createCell(5).setCellValue("Status");
+        header.createCell(6).setCellValue("DOB");
+        header.createCell(7).setCellValue("Student ID");
+        header.createCell(8).setCellValue("Major");
 
         int rowNum = 1;
         for (Student s : students) {
@@ -164,8 +166,10 @@ public class ExcelUtil {
             String role = (s instanceof CreditStudent) ? "CreditStudent" :
                     (s instanceof YearBasedStudent) ? "YearBasedStudent" : s.getRole();
             row.createCell(4).setCellValue(role);
-            row.createCell(5).setCellValue(s.studentId);
-            row.createCell(6).setCellValue(s.major);
+            row.createCell(5).setCellValue(s.isStatus());
+            row.createCell(6).setCellValue(s.getDob());
+            row.createCell(7).setCellValue(s.studentId);
+            row.createCell(8).setCellValue(s.major);
         }
 
         try (FileOutputStream fos = new FileOutputStream(file)) {
@@ -197,17 +201,17 @@ public class ExcelUtil {
                 String password = row.getCell(2).getStringCellValue();
                 String fullName = row.getCell(3).getStringCellValue();
                 String role = row.getCell(4).getStringCellValue();
-                String studentId = row.getCell(5).getStringCellValue();
-                String major = row.getCell(6).getStringCellValue();
-
-                boolean status = true;
+                boolean status = row.getCell(5).getBooleanCellValue();
+                String dob = row.getCell(6).getStringCellValue();
+                String studentId = row.getCell(7).getStringCellValue();
+                String major = row.getCell(8).getStringCellValue();
 
                 if ("YearBasedStudent".equalsIgnoreCase(role)) {
                     students.add(new YearBasedStudent(userId, email, password, fullName,
-                            role, status, "", studentId, major));
+                            role, status, dob, studentId, major));
                 } else {
                     students.add(new CreditStudent(userId, email, password, fullName,
-                            role, status, "", studentId, major));
+                            role, status, dob, studentId, major));
                 }
             }
         }

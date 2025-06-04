@@ -20,6 +20,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JCheckBox;
 import javax.swing.table.DefaultTableModel;
 
 
@@ -67,19 +68,22 @@ public class Manager extends User {
 
 	public void viewListStudent() {
 		students.sort(Comparator.comparing(Student::getFullName));
-		System.out.printf("%-5s %-10s %-25s %-15s %-20s %-18s %-12s %-15s\n", "STT", "UserID", "Email", "Password", "Full Name", "Role",
+		System.out.printf("%-5s %-10s %-25s %-15s %-20s %-10s %-10s %-12s %-15s\n",
+				"STT", "UserID", "Email", "Password", "Full Name", "Role", "Status", "DOB",
 				"Student ID", "Major");
         for (int i = 0; i < students.size(); i++) {
             Student student = students.get(i);
 			String role = (student instanceof CreditStudent) ? "CreditStudent" :
 					(student instanceof YearBasedStudent) ? "YearBasedStudent" : student.getRole();
-			System.out.printf("%-5d %-10s %-25s %-15s %-20s %-18s %-12s %-15s\n",
+			System.out.printf("%-5d %-10s %-25s %-15s %-20s %-10s %-10s %-12s %-15s\n",
 					i + 1,
 					student.getUserId(),
 					student.getEmail(),
 					student.getPassword(),
 					student.getFullName(),
 					role,
+					student.isStatus(),
+					student.getDob(),
 					student.studentId,
 					student.major);
 		}
@@ -229,7 +233,7 @@ class ManagerPanel extends JFrame {
         JPanel studentPanel = new JPanel(new BorderLayout());
 
         // Khởi tạo JTable và JScrollPane
-		String[] columnNames = {"STT", "UserID", "Email", "Password", "Full Name", "Role", "Student ID", "Major"};
+		String[] columnNames = {"STT", "UserID", "Email", "Password", "Full Name", "Role", "Status", "DOB", "Student ID", "Major"};
         studentTableModel = new DefaultTableModel(columnNames, 0);
 		studentTable = new JTable(studentTableModel);
 
@@ -239,7 +243,15 @@ class ManagerPanel extends JFrame {
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> refreshStudentTable(manager.getStudents()));
-        studentPanel.add(refreshButton, BorderLayout.SOUTH);
+		// add student button within the student panel for convenience
+		JButton addStudentPanelButton = new JButton("Add Student");
+		addStudentPanelButton.addActionListener(e -> showAddStudentDialog(manager));
+
+		JPanel studentBottomPanel = new JPanel();
+		studentBottomPanel.add(addStudentPanelButton);
+		studentBottomPanel.add(refreshButton);
+
+		studentPanel.add(studentBottomPanel, BorderLayout.SOUTH);
 
         contentPanel.add(studentPanel, "View Student List");
 
@@ -280,6 +292,7 @@ class ManagerPanel extends JFrame {
 		addStudentButton.addActionListener(e -> {
 			showAddStudentDialog(manager);
 		});
+
 
         add(mainPanel);
         setVisible(true);
@@ -436,6 +449,10 @@ class ManagerPanel extends JFrame {
 		JTextField nameField = new JTextField();
 		JLabel typeLabel = new JLabel("Student Type:");
 		JComboBox<String> typeComboBox = new JComboBox<>(new String[]{"CreditStudent", "YearBasedStudent"});
+		JCheckBox statusCheckBox = new JCheckBox("Active");
+		statusCheckBox.setSelected(true);
+		JLabel dobLabel = new JLabel("DOB (yyyy-mm-dd):");
+		JTextField dobField = new JTextField();
 		JLabel studentIdLabel = new JLabel("Student ID:");
 		JTextField studentIdField = new JTextField();
 		JLabel majorLabel = new JLabel("Major:");
@@ -448,11 +465,13 @@ class ManagerPanel extends JFrame {
 			String password = passwordField.getText().trim();
 			String fullName = nameField.getText().trim();
 			String type = (String) typeComboBox.getSelectedItem();
+			boolean status = statusCheckBox.isSelected();
+			String dob = dobField.getText().trim();
 			String studentId = studentIdField.getText().trim();
 			String major = majorField.getText().trim();
 
 			if (userId.isEmpty() || email.isEmpty() || password.isEmpty() || fullName.isEmpty()
-					|| studentId.isEmpty() || major.isEmpty()) {
+					|| studentId.isEmpty() || major.isEmpty() || dob.isEmpty()) {
 				JOptionPane.showMessageDialog(studentDialog, "All fields are required!");
 				return;
 			}
@@ -460,12 +479,11 @@ class ManagerPanel extends JFrame {
 			Student newStudent;
 			if ("YearBasedStudent".equalsIgnoreCase(type)) {
 				newStudent = new YearBasedStudent(userId, email, password, fullName,
-						type, true, "", studentId, major);
+						type, status, dob, studentId, major);
 			} else {
 				newStudent = new CreditStudent(userId, email, password, fullName,
-						type, true, "", studentId, major);
+						type, status, dob, studentId, major);
 			}
-
 			manager.getStudents().add(newStudent);
 			try {
 				ExcelUtil.writeStudentsToExcel(manager.getStudents(), Manager.STUDENT_EXCEL_PATH);
@@ -482,10 +500,11 @@ class ManagerPanel extends JFrame {
 		studentDialog.add(passwordLabel);  studentDialog.add(passwordField);
 		studentDialog.add(nameLabel);      studentDialog.add(nameField);
 		studentDialog.add(typeLabel);      studentDialog.add(typeComboBox);
+		studentDialog.add(new JLabel("Status:")); studentDialog.add(statusCheckBox);
+		studentDialog.add(dobLabel);      studentDialog.add(dobField);
 		studentDialog.add(studentIdLabel); studentDialog.add(studentIdField);
 		studentDialog.add(majorLabel);     studentDialog.add(majorField);
 		studentDialog.add(new JLabel());   studentDialog.add(submitButton);
-
 		studentDialog.setVisible(true);
 	}
 
@@ -585,6 +604,8 @@ class ManagerPanel extends JFrame {
 						student.getPassword(),
                     student.getFullName(),
 						role,
+						student.isStatus() ? "Active" : "Inactive",
+						student.getDob(),
                     student.studentId,
                     student.major,
                 });
