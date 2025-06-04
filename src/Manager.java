@@ -67,8 +67,7 @@ public class Manager extends User {
 
 	public void viewListStudent() {
 		students.sort(Comparator.comparing(Student::getFullName));
-		System.out.printf("%-5s %-10s %-25s %-15s %-20s %-18s %-12s %-15s\n",
-				"STT", "UserID", "Email", "Password", "Full Name", "Role",
+		System.out.printf("%-5s %-10s %-25s %-15s %-20s %-18s %-12s %-15s\n", "UserID", "Email", "Password", "Full Name", "Role",
 				"Student ID", "Major");
         for (int i = 0; i < students.size(); i++) {
             Student student = students.get(i);
@@ -224,7 +223,7 @@ class ManagerPanel extends JFrame {
         JPanel studentPanel = new JPanel(new BorderLayout());
 
         // Khởi tạo JTable và JScrollPane
-		String[] columnNames = {"STT", "UserID", "Email", "Password", "Full Name", "Role", "Student ID", "Major"};
+		String[] columnNames = {"UserID", "Email", "Password", "Full Name", "Role", "Student ID", "Major"};
         studentTableModel = new DefaultTableModel(columnNames, 0);
 		studentTable = new JTable(studentTableModel);
 
