@@ -1,4 +1,4 @@
-import org.apache.poi.xdgf.usermodel.section.geometry.RelEllipticalArcTo;
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,25 +31,49 @@ public class ClassSection {
 	}
 
 	public boolean addStudent(Student student) {
-		if(enrolledStudents.size() >= maxCapacity) 
-		{
+		if (enrolledStudents.size() >= maxCapacity) {
 			System.out.println("This class is full. Can not add student");
 			return false;
-		}
-		else if(!isStudentEligible(student)) 
-		{
+		} else if (!isStudentEligible(student)) {
 			System.out.println("Students are not eligible to take this class.");
-			return isStudentEligible(student);			
-		}
-		else
-		{
+			return false;
+		} else if (enrolledStudents.contains(student)) {
+			System.out.println("Student already enrolled in this class.");
+			return false;
+		} else {
 			enrolledStudents.add(student);
-			return isStudentEligible(student);
+			student.addEnrolledClass(classSectionId);
+			try {
+				List<Student> all = new ArrayList<>();
+				all.addAll(Main.creditStudents);
+				all.addAll(Main.yearBasedStudents);
+				ExcelUtil.writeStudentsToExcel(all, Manager.STUDENT_EXCEL_PATH);
+				ExcelUtil.writeClassSectionsToExcel(Manager.classSections, Manager.CLASS_SECTION_EXCEL_PATH);
+			} catch (IOException ex) {
+				System.err.println("Failed to save enrollment: " + ex.getMessage());
+			}
+			return true;
 		}
-		
+
 	}
 
-	public boolean removeStudent(int studentId) {
+	public boolean removeStudent(Student student) {
+		if (!enrolledStudents.contains(student)) {
+			System.out.println("Student not enrolled in this class.");
+			return false;
+		}
+
+		enrolledStudents.remove(student);
+		student.removeEnrolledClass(classSectionId);
+		try {
+			List<Student> all = new ArrayList<>();
+			all.addAll(Main.creditStudents);
+			all.addAll(Main.yearBasedStudents);
+			ExcelUtil.writeStudentsToExcel(all, Manager.STUDENT_EXCEL_PATH);
+			ExcelUtil.writeClassSectionsToExcel(Manager.classSections, Manager.CLASS_SECTION_EXCEL_PATH);
+		} catch (IOException ex) {
+			System.err.println("Failed to save enrollment: " + ex.getMessage());
+		}
 		return true;
 	}
 

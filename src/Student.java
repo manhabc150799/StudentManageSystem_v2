@@ -13,14 +13,46 @@ public abstract class Student extends User {
 
 	protected List<Schedule> schedules;
 
-	
+	/** List of class section IDs the student has enrolled in */
+	protected List<String> enrolledClassIds;
+
+
 	public Student(String userId, String email, String password, String fullName, String role, boolean status, String dob,
-			String studentId, String major) {
+				   String studentId, String major) {
 		super(userId, email, password, fullName, role, status, dob);
 		this.studentId = studentId;
 		this.major = major;
 		this.completedSubjects = new ArrayList<Subject>();
 		this.schedules = new ArrayList<Schedule>();
+		this.enrolledClassIds = new ArrayList<>();
+	}
+
+	/**
+	 * Adds the given class section ID to the list of enrolled classes if not already present.
+	 */
+	public void addEnrolledClass(String classSectionId) {
+		if (!enrolledClassIds.contains(classSectionId)) {
+			enrolledClassIds.add(classSectionId);
+		}
+	}
+
+	/**
+	 * Removes the given class section ID from the student's enrollment list
+	 * if present.
+	 */
+	public void removeEnrolledClass(String classSectionId) {
+		enrolledClassIds.remove(classSectionId);
+	}
+
+
+
+	/**
+	 * Adds the given class section ID to the list of enrolled classes if not already present.
+	 */
+
+
+	public List<String> getEnrolledClassIds() {
+		return enrolledClassIds;
 	}
 
 

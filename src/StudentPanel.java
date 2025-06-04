@@ -64,6 +64,9 @@ public class StudentPanel extends JFrame {
                 boolean ok = cs.addStudent(student);
                 JOptionPane.showMessageDialog(dialog,
                         ok ? "Enrolled successfully" : "Could not enroll");
+                if (ok) {
+                    model.setValueAt(cs.enrolledStudents.size() + "/" + cs.maxCapacity, row, 3);
+                }
             }
         });
         dialog.add(enrollBtn, BorderLayout.SOUTH);
@@ -77,14 +80,39 @@ public class StudentPanel extends JFrame {
 
         String[] columnNames = {"Class ID", "Subject", "Schedule"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
-        for (ClassSection cs : Manager.classSections) {
-            if (cs.enrolledStudents.contains(student)) {
+        for (String id : student.getEnrolledClassIds()) {
+            ClassSection cs = Manager.classSections.stream()
+                    .filter(c -> c.classSectionId.equals(id))
+                    .findFirst()
+                    .orElse(null);
+            if (cs != null) {
                 String scheduleText = getScheduleText(cs.schedules);
                 model.addRow(new Object[]{cs.classSectionId, cs.subject.subjectName, scheduleText});
             }
         }
         JTable table = new JTable(model);
         dialog.add(new JScrollPane(table));
+        JButton removeBtn = new JButton("Remove");
+        removeBtn.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row >= 0) {
+                String classId = (String) model.getValueAt(row, 0);
+                ClassSection cs = Manager.classSections.stream()
+                        .filter(c -> c.classSectionId.equals(classId))
+                        .findFirst()
+                        .orElse(null);
+                if (cs != null) {
+                    boolean ok = cs.removeStudent(student);
+                    JOptionPane.showMessageDialog(dialog,
+                            ok ? "Removed successfully" : "Could not remove");
+                    if (ok) {
+                        model.removeRow(row);
+                    }
+                }
+            }
+        });
+        dialog.add(removeBtn, BorderLayout.SOUTH);
+
 
         dialog.setVisible(true);
     }

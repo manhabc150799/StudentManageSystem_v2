@@ -155,6 +155,7 @@ public class ExcelUtil {
         header.createCell(6).setCellValue("DOB");
         header.createCell(7).setCellValue("Student ID");
         header.createCell(8).setCellValue("Major");
+        header.createCell(9).setCellValue("Enrolled Classes");
 
         int rowNum = 1;
         for (Student s : students) {
@@ -170,6 +171,7 @@ public class ExcelUtil {
             row.createCell(6).setCellValue(s.getDob());
             row.createCell(7).setCellValue(s.studentId);
             row.createCell(8).setCellValue(s.major);
+            row.createCell(9).setCellValue(String.join(",", s.getEnrolledClassIds()));
         }
 
         try (FileOutputStream fos = new FileOutputStream(file)) {
@@ -205,14 +207,23 @@ public class ExcelUtil {
                 String dob = row.getCell(6).getStringCellValue();
                 String studentId = row.getCell(7).getStringCellValue();
                 String major = row.getCell(8).getStringCellValue();
+                String enrolled = row.getLastCellNum() > 9 && row.getCell(9) != null ? row.getCell(9).getStringCellValue() : "";
 
+                Student student;
                 if ("YearBasedStudent".equalsIgnoreCase(role)) {
-                    students.add(new YearBasedStudent(userId, email, password, fullName,
-                            role, status, dob, studentId, major));
+                    student = new YearBasedStudent(userId, email, password, fullName,
+                            role, status, dob, studentId, major);
                 } else {
-                    students.add(new CreditStudent(userId, email, password, fullName,
-                            role, status, dob, studentId, major));
+                    student = new CreditStudent(userId, email, password, fullName,
+                            role, status, dob, studentId, major);
                 }
+                if (!enrolled.isEmpty()) {
+                    for (String id : enrolled.split(",")) {
+                        ((Student) student).addEnrolledClass(id.trim());
+                    }
+                }
+
+                students.add(student);
             }
         }
 

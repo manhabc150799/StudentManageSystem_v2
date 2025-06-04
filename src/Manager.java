@@ -59,6 +59,19 @@ public class Manager extends User {
 				this.students.addAll(Main.yearBasedStudents);
 			}
 
+			// rebuild enrollment relationships
+			for (Student s : this.students) {
+				for (String id : s.getEnrolledClassIds()) {
+					ClassSection cs = Manager.classSections.stream()
+							.filter(c -> c.classSectionId.equals(id))
+							.findFirst()
+							.orElse(null);
+					if (cs != null && !cs.enrolledStudents.contains(s)) {
+						cs.enrolledStudents.add(s);
+					}
+				}
+			}
+
 			ExcelUtil.writeStudentsToExcel(this.students, STUDENT_EXCEL_PATH);
 		} catch (IOException ex) {
 			System.err.println("Failed to load data from Excel: " + ex.getMessage());
@@ -190,6 +203,8 @@ public class Manager extends User {
 
 class ManagerPanel extends JFrame {
 	private static final long serialVersionUID = 1L;
+	/** The manager instance backing this UI */
+	private final Manager manager;
 	private JTable studentTable;
 	private DefaultTableModel studentTableModel;
 
@@ -201,9 +216,10 @@ class ManagerPanel extends JFrame {
 
 
     public ManagerPanel(Manager manager) {
+		this.manager = manager;
 
 		// Sync the latest data from Excel when opening the panel
-		manager.syncWithExcel();
+		this.manager.syncWithExcel();
 
 
     	setTitle("Manager Panel");
@@ -546,6 +562,8 @@ class ManagerPanel extends JFrame {
     public void refreshClassSectionTable() {
         try {
             // Clear existing data
+			// Ensure we have the latest data from Excel
+			manager.syncWithExcel();
             classSectionTableModel.setRowCount(0);
 
             int count = 1;
