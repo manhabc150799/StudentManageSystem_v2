@@ -214,9 +214,11 @@ class ManagerPanel extends JFrame {
         JButton viewStudentsButton = new JButton("View Student List");
         JButton viewClassSectionButton = new JButton("Class Section");
         JButton addClassSectionButton = new JButton("Add Class Section");
+		JButton addStudentButton = new JButton("Add Student");
         menuPanel.add(viewStudentsButton);
         menuPanel.add(viewClassSectionButton);
         menuPanel.add(addClassSectionButton);
+		menuPanel.add(addStudentButton);
 
         mainPanel.add(menuPanel, BorderLayout.NORTH);
 
@@ -275,6 +277,9 @@ class ManagerPanel extends JFrame {
         addClassSectionButton.addActionListener(e -> {
           showAddClassSectionDialog(manager);
         });
+		addStudentButton.addActionListener(e -> {
+			showAddStudentDialog(manager);
+		});
 
         add(mainPanel);
         setVisible(true);
@@ -413,8 +418,76 @@ class ManagerPanel extends JFrame {
     	  classSectionDialog.add(new JScrollPane(scheduleArea));
     	  classSectionDialog.add(submitButton);
 
-    	  classSectionDialog.setVisible(true);
-    	}
+		classSectionDialog.setVisible(true);
+	}
+
+	private void showAddStudentDialog(Manager manager) {
+		JDialog studentDialog = new JDialog(this, "Add Student", ModalityType.MODELESS);
+		studentDialog.setSize(400, 400);
+		studentDialog.setLayout(new GridLayout(0, 2));
+
+		JLabel userIdLabel = new JLabel("User ID:");
+		JTextField userIdField = new JTextField();
+		JLabel emailLabel = new JLabel("Email:");
+		JTextField emailField = new JTextField();
+		JLabel passwordLabel = new JLabel("Password:");
+		JTextField passwordField = new JTextField();
+		JLabel nameLabel = new JLabel("Full Name:");
+		JTextField nameField = new JTextField();
+		JLabel typeLabel = new JLabel("Student Type:");
+		JComboBox<String> typeComboBox = new JComboBox<>(new String[]{"CreditStudent", "YearBasedStudent"});
+		JLabel studentIdLabel = new JLabel("Student ID:");
+		JTextField studentIdField = new JTextField();
+		JLabel majorLabel = new JLabel("Major:");
+		JTextField majorField = new JTextField();
+
+		JButton submitButton = new JButton("Submit");
+		submitButton.addActionListener(e -> {
+			String userId = userIdField.getText().trim();
+			String email = emailField.getText().trim();
+			String password = passwordField.getText().trim();
+			String fullName = nameField.getText().trim();
+			String type = (String) typeComboBox.getSelectedItem();
+			String studentId = studentIdField.getText().trim();
+			String major = majorField.getText().trim();
+
+			if (userId.isEmpty() || email.isEmpty() || password.isEmpty() || fullName.isEmpty()
+					|| studentId.isEmpty() || major.isEmpty()) {
+				JOptionPane.showMessageDialog(studentDialog, "All fields are required!");
+				return;
+			}
+
+			Student newStudent;
+			if ("YearBasedStudent".equalsIgnoreCase(type)) {
+				newStudent = new YearBasedStudent(userId, email, password, fullName,
+						type, true, "", studentId, major);
+			} else {
+				newStudent = new CreditStudent(userId, email, password, fullName,
+						type, true, "", studentId, major);
+			}
+
+			manager.getStudents().add(newStudent);
+			try {
+				ExcelUtil.writeStudentsToExcel(manager.getStudents(), Manager.STUDENT_EXCEL_PATH);
+			} catch (IOException ex) {
+				System.err.println("Failed to save to Excel: " + ex.getMessage());
+			}
+			refreshStudentTable(manager.getStudents());
+			JOptionPane.showMessageDialog(studentDialog, "Student added successfully!");
+			studentDialog.dispose();
+		});
+
+		studentDialog.add(userIdLabel);    studentDialog.add(userIdField);
+		studentDialog.add(emailLabel);     studentDialog.add(emailField);
+		studentDialog.add(passwordLabel);  studentDialog.add(passwordField);
+		studentDialog.add(nameLabel);      studentDialog.add(nameField);
+		studentDialog.add(typeLabel);      studentDialog.add(typeComboBox);
+		studentDialog.add(studentIdLabel); studentDialog.add(studentIdField);
+		studentDialog.add(majorLabel);     studentDialog.add(majorField);
+		studentDialog.add(new JLabel());   studentDialog.add(submitButton);
+
+		studentDialog.setVisible(true);
+	}
 
 
     //Get Schedule Text
