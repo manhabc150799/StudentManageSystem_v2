@@ -83,9 +83,12 @@ public class Main {
        }
     
     public static void main(String[] args) throws IOException {
+
+        readcreditSubjectsFromExcel("C:\\Users\\LENOVO\\Downloads\\Subject.xlsx");
         
         ArrayList<User> users = new ArrayList<>();
-        users.add(new Manager("M01", "1", "1", "Admin", "Manager", true, "1980-01-01", "MG123"));
+        Manager manager = new Manager("M01", "1", "1", "Admin", "Manager", true, "1980-01-01", "MG123");
+        users.add(manager);
         // Load lecturers from Excel
         lecturers = new ArrayList<>(ExcelUtil.readLecturersFromExcel(LECTURER_EXCEL_PATH));
         if (lecturers.isEmpty()) {
@@ -94,9 +97,7 @@ public class Main {
         users.addAll(lecturers);
         ExcelUtil.writeLecturersToExcel(lecturers, LECTURER_EXCEL_PATH);
         
-        
-        readcreditSubjectsFromExcel("C:\\Users\\LENOVO\\Downloads\\Subject.xlsx");
-        ExcelUtil.readClassSectionsFromExcel("C:\\Users\\LENOVO\\Downloads\\ClassSections.xlsx");
+
         // Load students from Excel and add them to the system
         java.util.List<Student> students = ExcelUtil.readStudentsFromExcel(Manager.STUDENT_EXCEL_PATH);
         for (Student s : students) {
