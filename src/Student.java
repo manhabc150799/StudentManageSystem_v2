@@ -65,6 +65,23 @@ public abstract class Student extends User {
 	public abstract void viewTimeTable();
 
 	public abstract boolean enrollClassSection();
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null || getClass() != obj.getClass()) {
+			return false;
+		}
+		Student other = (Student) obj;
+		return studentId != null && studentId.equals(other.studentId);
+	}
+
+	@Override
+	public int hashCode() {
+		return studentId != null ? studentId.hashCode() : 0;
+	}
 	
 
 }
