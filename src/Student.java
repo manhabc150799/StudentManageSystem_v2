@@ -54,6 +54,28 @@ public abstract class Student extends User {
 	public List<String> getEnrolledClassIds() {
 		return enrolledClassIds;
 	}
+	/**
+	 * Calculates the average CPA for all class sections this student has
+	 * enrolled in using the grades stored in {@link ClassSection}.
+	 *
+	 * @return the average CPA on a 4.0 scale, or 0 if the student has not
+	 *         enrolled in any class sections
+	 */
+	public double calculateAverageCPAFromClasses() {
+		double total = 0.0;
+		int count = 0;
+		for (String id : enrolledClassIds) {
+			ClassSection cs = Manager.classSections.stream()
+					.filter(c -> c.classSectionId.equals(id))
+					.findFirst()
+					.orElse(null);
+			if (cs != null) {
+				total += cs.calculateCPA(studentId);
+				count++;
+			}
+		}
+		return count == 0 ? 0.0 : total / count;
+	}
 
 
 	public abstract void viewResult();

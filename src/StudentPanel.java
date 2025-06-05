@@ -23,6 +23,8 @@ public class StudentPanel extends JFrame {
         infoPanel.add(new JLabel(student.getEmail()));
         infoPanel.add(new JLabel("Major:"));
         infoPanel.add(new JLabel(student.major));
+        infoPanel.add(new JLabel("Average CPA:"));
+        infoPanel.add(new JLabel(String.format("%.2f", student.calculateAverageCPAFromClasses())));
         infoPanel.add(new JLabel("Role:"));
         infoPanel.add(new JLabel(student.getRole()));
 
