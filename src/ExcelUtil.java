@@ -229,4 +229,90 @@ public class ExcelUtil {
 
         return students;
     }
+
+    /**
+     * Writes lecturer information to an Excel file.
+     */
+    public static void writeLecturersToExcel(List<Lecturer> lecturers, String filePath) throws IOException {
+        File file = new File(filePath);
+        File parent = file.getParentFile();
+        if (parent != null) {
+            parent.mkdirs();
+        }
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Lecturers");
+
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("User ID");
+        header.createCell(1).setCellValue("Email");
+        header.createCell(2).setCellValue("Password");
+        header.createCell(3).setCellValue("Full Name");
+        header.createCell(4).setCellValue("Role");
+        header.createCell(5).setCellValue("Status");
+        header.createCell(6).setCellValue("DOB");
+        header.createCell(7).setCellValue("Lecturer ID");
+        header.createCell(8).setCellValue("Department");
+        header.createCell(9).setCellValue("Assigned Classes");
+
+        int rowNum = 1;
+        for (Lecturer l : lecturers) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(l.getUserId());
+            row.createCell(1).setCellValue(l.getEmail());
+            row.createCell(2).setCellValue(l.getPassword());
+            row.createCell(3).setCellValue(l.getFullName());
+            row.createCell(4).setCellValue(l.getRole());
+            row.createCell(5).setCellValue(l.isStatus());
+            row.createCell(6).setCellValue(l.getDob());
+            row.createCell(7).setCellValue(l.getLecturerId());
+            row.createCell(8).setCellValue(l.getDepartment());
+            row.createCell(9).setCellValue(String.join(",", l.getAssignedClassIds()));
+        }
+
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            workbook.write(fos);
+        }
+        workbook.close();
+    }
+
+    /**
+     * Reads lecturer information from an Excel file. Returns an empty list if the file does not exist.
+     */
+    public static List<Lecturer> readLecturersFromExcel(String filePath) throws IOException {
+        List<Lecturer> lecturers = new ArrayList<>();
+        File file = new File(filePath);
+        if (!file.exists()) {
+            return lecturers;
+        }
+
+        try (FileInputStream fis = new FileInputStream(file); Workbook workbook = new XSSFWorkbook(fis)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                String userId = row.getCell(0).getStringCellValue();
+                String email = row.getCell(1).getStringCellValue();
+                String password = row.getCell(2).getStringCellValue();
+                String fullName = row.getCell(3).getStringCellValue();
+                String role = row.getCell(4).getStringCellValue();
+                boolean status = row.getCell(5).getBooleanCellValue();
+                String dob = row.getCell(6).getStringCellValue();
+                String lecturerId = row.getCell(7).getStringCellValue();
+                String department = row.getCell(8).getStringCellValue();
+                String assigned = row.getLastCellNum() > 9 && row.getCell(9) != null ? row.getCell(9).getStringCellValue() : "";
+
+                Lecturer lecturer = new Lecturer(userId, email, password, fullName, role, status, dob, lecturerId, department);
+                if (!assigned.isEmpty()) {
+                    for (String id : assigned.split(",")) {
+                        lecturer.addAssignedClass(id.trim());
+                    }
+                }
+                lecturers.add(lecturer);
+            }
+        }
+
+        return lecturers;
+    }
 }

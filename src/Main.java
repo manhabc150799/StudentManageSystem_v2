@@ -19,6 +19,12 @@ public class Main {
 	
 	public static ArrayList<CreditStudent> creditStudents = new ArrayList<CreditStudent>();
     public static ArrayList<YearBasedStudent> yearBasedStudents = new ArrayList<YearBasedStudent>();
+    public static ArrayList<Lecturer> lecturers = new ArrayList<>();
+
+    /** Path to the lecturer Excel file */
+    public static final String LECTURER_EXCEL_PATH =
+            System.getProperty("user.home") + java.io.File.separator +
+                    "Downloads" + java.io.File.separator + "Lecturers.xlsx";
     
     public static ArrayList<Subject> readcreditSubjectsFromExcel(String filePath) throws IOException {
         try (FileInputStream fis = new FileInputStream(filePath);
@@ -77,7 +83,13 @@ public class Main {
         
         ArrayList<User> users = new ArrayList<>();
         users.add(new Manager("M01", "1", "1", "Admin", "Manager", true, "1980-01-01", "MG123"));
-        users.add(new Lecturer("L01", "lecturer@example.com", "password", "Lecturer B", "Lecturer", true, "1975-03-21","LT01", "KCNTT"));
+        // Load lecturers from Excel
+        lecturers = new ArrayList<>(ExcelUtil.readLecturersFromExcel(LECTURER_EXCEL_PATH));
+        if (lecturers.isEmpty()) {
+            lecturers.add(new Lecturer("L01", "lecturer@example.com", "password", "Lecturer B", "Lecturer", true, "1975-03-21","LT01", "KCNTT"));
+        }
+        users.addAll(lecturers);
+        ExcelUtil.writeLecturersToExcel(lecturers, LECTURER_EXCEL_PATH);
         
         
         readcreditSubjectsFromExcel("C:\\Users\\LENOVO\\Downloads\\Subject.xlsx");
@@ -142,7 +154,7 @@ public class Main {
                             SwingUtilities.invokeLater(() -> new ManagerPanel((Manager) user));
                             break;
                         case "lecturer":
-                            SwingUtilities.invokeLater(() -> showMainScreen());
+                            SwingUtilities.invokeLater(() -> new LecturerPanel((Lecturer) user));
                             break;
                         case "student":
                         case "creditstudent":

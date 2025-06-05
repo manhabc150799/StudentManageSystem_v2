@@ -8,25 +8,49 @@ public class Lecturer extends User {
 	private String department;
 
 	private List<ClassSection> assignedClasses;
-	
+
+	/** IDs of class sections this lecturer is assigned to */
+	private List<String> assignedClassIds;
+
 	private List<Schedule> schedules;
 	
 	
 
 	public Lecturer(String userId, String email, String password, String fullName, String role, boolean status, String dob,
-			String lecturerId, String department) {
+					String lecturerId, String department) {
 		super(userId, email, password, fullName, role, status, dob);
 		this.lecturerId = lecturerId;
 		this.department = department;
 		this.assignedClasses = new ArrayList<ClassSection>();
+		this.assignedClassIds = new ArrayList<>();
 	}
 
 	public void enterScore() {
 		
 	}
-
 	public void viewTeachingSchedule() {
 
+	}
+
+	/**
+	 * Adds the given class section ID to the list of assignments
+	 * if not already present.
+	 */
+	public void addAssignedClass(String classSectionId) {
+		if (!assignedClassIds.contains(classSectionId)) {
+			assignedClassIds.add(classSectionId);
+		}
+	}
+
+	/**
+	 * Removes the given class section ID from the lecturer's assignments.
+	 */
+	public void removeAssignedClass(String classSectionId) {
+		assignedClassIds.remove(classSectionId);
+	}
+
+	public List<String> getAssignedClassIds() {
+		return assignedClassIds;
 	}
 
 	//Getters and Setters
