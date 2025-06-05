@@ -22,10 +22,11 @@ public class ExcelUtil {
         header.createCell(1).setCellValue("Subject Code");
         header.createCell(2).setCellValue("Subject Name");
         header.createCell(3).setCellValue("Semester");
-        header.createCell(4).setCellValue("Lecturer");
-        header.createCell(5).setCellValue("Max Capacity");
-        header.createCell(6).setCellValue("Schedule");
-        header.createCell(7).setCellValue("Current Enrollment");
+        header.createCell(4).setCellValue("Lecturers");
+        header.createCell(5).setCellValue("Max Lecturers");
+        header.createCell(6).setCellValue("Max Capacity");
+        header.createCell(7).setCellValue("Schedule");
+        header.createCell(8).setCellValue("Current Enrollment");
 
         int rowNum = 1;
         for (ClassSection cs : classSections) {
@@ -34,10 +35,11 @@ public class ExcelUtil {
             row.createCell(1).setCellValue(cs.subject.subjectCode);
             row.createCell(2).setCellValue(cs.subject.subjectName);
             row.createCell(3).setCellValue(cs.semeter);
-            row.createCell(4).setCellValue(cs.lecturer);
-            row.createCell(5).setCellValue(cs.maxCapacity);
-            row.createCell(6).setCellValue(getScheduleText(cs.schedules));
-            row.createCell(7).setCellValue(cs.enrolledStudents.size());
+            row.createCell(4).setCellValue(String.join(",", cs.lecturerIds));
+            row.createCell(5).setCellValue(cs.maxLecturers);
+            row.createCell(6).setCellValue(cs.maxCapacity);
+            row.createCell(7).setCellValue(getScheduleText(cs.schedules));
+            row.createCell(8).setCellValue(cs.enrolledStudents.size());
         }
 
         File file = new File(filePath);
@@ -91,14 +93,31 @@ public class ExcelUtil {
                 String subjectCode = row.getCell(1).getStringCellValue();
                 String subjectName = row.getCell(2).getStringCellValue();
                 String semester = row.getCell(3).getStringCellValue();
-                String lecturer = row.getCell(4).getStringCellValue();
-                int maxCapacity = (int) row.getCell(5).getNumericCellValue();
-                String scheduleText = row.getCell(6).getStringCellValue();
+                String lecturerStr = row.getCell(4).getStringCellValue();
+                int maxLecturers;
+                int maxCapacity;
+                String scheduleText;
+                if (row.getLastCellNum() >= 8) {
+                    maxLecturers = (int) row.getCell(5).getNumericCellValue();
+                    maxCapacity = (int) row.getCell(6).getNumericCellValue();
+                    scheduleText = row.getCell(7).getStringCellValue();
+                } else {
+                    maxLecturers = 1;
+                    maxCapacity = (int) row.getCell(5).getNumericCellValue();
+                    scheduleText = row.getCell(6).getStringCellValue();
+                }
 
                 Subject subject = findSubject(subjectCode, subjectName);
                 List<Schedule> schedules = parseScheduleText(scheduleText);
 
-                sections.add(new ClassSection(classSectionId, subject, semester, lecturer, maxCapacity, schedules));
+                ClassSection cs = new ClassSection(classSectionId, subject, semester,
+                        maxLecturers, maxCapacity, schedules);
+                if (lecturerStr != null && !lecturerStr.isEmpty()) {
+                    for (String id : lecturerStr.split(",")) {
+                        cs.lecturerIds.add(id.trim());
+                    }
+                }
+                sections.add(cs);
             }
         }
         return sections;

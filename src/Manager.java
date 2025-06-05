@@ -126,10 +126,10 @@ public class Manager extends User {
 
 	        System.out.print("Enter Semester: ");
 	        String semester = scanner.nextLine();
-	        System.out.print("Enter Lecturer: ");
-	        String lecturer = scanner.nextLine();
-	        System.out.print("Enter Max Students: ");
-	        int maxStudents = Integer.parseInt(scanner.nextLine());
+		System.out.print("Enter Max Lecturers: ");
+		int maxLecturers = Integer.parseInt(scanner.nextLine());
+		System.out.print("Enter Max Students: ");
+		int maxStudents = Integer.parseInt(scanner.nextLine());
 
 	        List<Schedule> schedules = new ArrayList<>();
 	        System.out.println("Enter Schedule details:");
@@ -155,7 +155,7 @@ public class Manager extends User {
 	        if (duplicate) {
 	            System.out.println("Class Section ID already exists. Please try again.");
 			} else {
-				ClassSection newClassSection = new ClassSection(classSectionId, subject, semester, lecturer, maxStudents, schedules);
+				ClassSection newClassSection = new ClassSection(classSectionId, subject, semester, maxLecturers, maxStudents, schedules);
 				classSections.add(newClassSection);
 				try {
 					ExcelUtil.writeClassSectionsToExcel(classSections, CLASS_SECTION_EXCEL_PATH);
@@ -328,8 +328,8 @@ class ManagerPanel extends JFrame {
     	  JComboBox<String> subjectComboBox = new JComboBox<>();
     	  JLabel semesterLabel = new JLabel("Semester:");
     	  JTextField semesterField = new JTextField();
-    	  JLabel lecturerLabel = new JLabel("Lecturer:");
-    	  JTextField lecturerField = new JTextField();
+		  JLabel lecturerLabel = new JLabel("Max Lecturers:");
+		  JTextField lecturerField = new JTextField();
     	  JLabel maxStudentsLabel = new JLabel("Max Students:");
     	  JTextField maxStudentsField = new JTextField();
 
@@ -401,8 +401,8 @@ class ManagerPanel extends JFrame {
     	      String classSectionId = idField.getText();
     	      String subjectName = (String) subjectComboBox.getSelectedItem();
     	      String semester = semesterField.getText();
-    	      String lecturer = lecturerField.getText();
-    	      int maxStudents = Integer.parseInt(maxStudentsField.getText());
+			  int maxLecturers = Integer.parseInt(lecturerField.getText());
+			  int maxStudents = Integer.parseInt(maxStudentsField.getText());
 
     	      Subject selectedSubject = findSubjectByName(subjectName);
     	      if (selectedSubject == null) {
@@ -417,7 +417,8 @@ class ManagerPanel extends JFrame {
     	          JOptionPane.showMessageDialog(classSectionDialog, "Class Section ID already exists!");
 			  } else {
 				  ClassSection newClassSection = new ClassSection(
-						  classSectionId, selectedSubject, semester, lecturer, maxStudents, schedules
+						  classSectionId, selectedSubject, semester, maxLecturers, maxStudents, schedules
+
 				  );
 				  Manager.classSections.add(newClassSection);
 				  try {
@@ -575,17 +576,17 @@ class ManagerPanel extends JFrame {
                 String scheduleText = getScheduleText(classSection.schedules); // Function to format schedule
                 int maxCapacity = classSection.maxCapacity;
                 int enrolledCount = classSection.enrolledStudents.size();
-				String lecturerName = classSection.lecturer;
-				if (lecturerName != null && !lecturerName.isBlank()) {
-					Lecturer lecturer = Main.lecturers.stream()
-							.filter(l -> l.getLecturerId().equalsIgnoreCase(classSection.lecturer))
-							.findFirst()
-							.orElse(null);
-					if (lecturer != null) {
-						lecturerName = lecturer.getFullName();
+				String lecturerName = "";
+				if (!classSection.lecturerIds.isEmpty()) {
+					java.util.List<String> names = new java.util.ArrayList<>();
+					for (String id : classSection.lecturerIds) {
+						Lecturer lec = Main.lecturers.stream()
+								.filter(l -> l.getLecturerId().equalsIgnoreCase(id))
+								.findFirst()
+								.orElse(null);
+						names.add(lec != null ? lec.getFullName() : id);
 					}
-				} else {
-					lecturerName = "";
+					lecturerName = String.join(",", names);
 				}
 
                 // Add a row to the model

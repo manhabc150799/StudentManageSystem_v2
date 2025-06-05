@@ -45,11 +45,12 @@ public class LecturerPanel extends JFrame {
         JDialog dialog = new JDialog(this, "Assign Class Section", true);
         dialog.setSize(500, 300);
 
-        String[] columnNames = {"Class ID", "Subject", "Schedule", "Lecturer"};
+        String[] columnNames = {"Class ID", "Subject", "Schedule", "Lecturers"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
         for (ClassSection cs : Manager.classSections) {
             String scheduleText = getScheduleText(cs.schedules);
-            model.addRow(new Object[]{cs.classSectionId, cs.subject.subjectName, scheduleText, cs.lecturer});
+            model.addRow(new Object[]{cs.classSectionId, cs.subject.subjectName, scheduleText,
+                    String.join(",", cs.lecturerIds)});
         }
         JTable table = new JTable(model);
         dialog.add(new JScrollPane(table), BorderLayout.CENTER);
@@ -59,12 +60,14 @@ public class LecturerPanel extends JFrame {
             int row = table.getSelectedRow();
             if (row >= 0) {
                 ClassSection cs = Manager.classSections.get(row);
-                if (cs.lecturer != null && !cs.lecturer.isBlank() && !cs.lecturer.equals(lecturer.getLecturerId())) {
-                    JOptionPane.showMessageDialog(dialog, "This class is already assigned.");
+                if (cs.lecturerIds.contains(lecturer.getLecturerId())) {
+                    JOptionPane.showMessageDialog(dialog, "You are already assigned to this class.");
+                } else if (cs.lecturerIds.size() >= cs.maxLecturers) {
+                    JOptionPane.showMessageDialog(dialog, "Maximum lecturers reached.");
                 } else {
-                    cs.lecturer = lecturer.getLecturerId();
+                    cs.addLecturer(lecturer.getLecturerId());
                     lecturer.addAssignedClass(cs.classSectionId);
-                    model.setValueAt(cs.lecturer, row, 3);
+                    model.setValueAt(String.join(",", cs.lecturerIds), row, 3);
                     try {
                         ExcelUtil.writeClassSectionsToExcel(Manager.classSections, Manager.CLASS_SECTION_EXCEL_PATH);
                         ExcelUtil.writeLecturersToExcel(Main.lecturers, Main.LECTURER_EXCEL_PATH);
@@ -108,8 +111,8 @@ public class LecturerPanel extends JFrame {
                         .filter(c -> c.classSectionId.equals(classId))
                         .findFirst()
                         .orElse(null);
-                if (cs != null && cs.lecturer != null && cs.lecturer.equals(lecturer.getLecturerId())) {
-                    cs.lecturer = "";
+                if (cs != null && cs.lecturerIds.contains(lecturer.getLecturerId())) {
+                    cs.removeLecturer(lecturer.getLecturerId());
                     lecturer.removeAssignedClass(classId);
                     model.removeRow(row);
                     try {

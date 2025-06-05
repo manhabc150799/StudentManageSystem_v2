@@ -11,21 +11,25 @@ public class ClassSection {
 	
 	public String semeter;
 
-	public String lecturer;
+	public int maxLecturers;
 
 	public int maxCapacity;
+
+	public List<String> lecturerIds;
+
 
 	public List<Student> enrolledStudents;
 
 	public List<Schedule> schedules;
 
-	public ClassSection(String classSectionId, Subject subject, String semeter, String lecturer,
-			int maxCapacity, List<Schedule> schedules) {
+	public ClassSection(String classSectionId, Subject subject, String semeter,
+						int maxLecturers, int maxCapacity, List<Schedule> schedules) {
 		this.classSectionId = classSectionId;
 		this.subject = subject;
 		this.semeter = semeter;
-		this.lecturer = lecturer;
+		this.maxLecturers = maxLecturers;
 		this.maxCapacity = maxCapacity;
+		this.lecturerIds = new ArrayList<>();
 		this.enrolledStudents = new ArrayList<Student>();
 		this.schedules = schedules;
 	}
@@ -95,10 +99,34 @@ public class ClassSection {
 	public Subject getSubject(){
 		return subject;
 	}
-	public String getLecturer(){
-		return lecturer;
+	/**
+	 * Returns a comma separated list of lecturer IDs assigned to this class.
+	 */
+	public String getLecturer() {
+		return String.join(",", lecturerIds);
 	}
-	public int getMaxCapacity(){
+
+	public int getMaxCapacity() {
 		return maxCapacity;
+	}
+
+	public int getMaxLecturers() {
+		return maxLecturers;
+	}
+
+	public List<String> getLecturerIds() {
+		return lecturerIds;
+	}
+
+	public boolean addLecturer(String lecturerId) {
+		if (lecturerIds.contains(lecturerId) || lecturerIds.size() >= maxLecturers) {
+			return false;
+		}
+		lecturerIds.add(lecturerId);
+		return true;
+	}
+
+	public void removeLecturer(String lecturerId) {
+		lecturerIds.remove(lecturerId);
 	}
 }
