@@ -2,6 +2,9 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
 
 public class ClassSection {
 
@@ -22,6 +25,12 @@ public class ClassSection {
 
 	public List<Schedule> schedules;
 
+	/** Stores midterm score by student ID */
+	public Map<String, Float> midtermScores;
+
+	/** Stores final exam score by student ID */
+	public Map<String, Float> finalScores;
+
 	public ClassSection(String classSectionId, Subject subject, String semeter,
 						int maxLecturers, int maxCapacity, List<Schedule> schedules) {
 		this.classSectionId = classSectionId;
@@ -32,6 +41,8 @@ public class ClassSection {
 		this.lecturerIds = new ArrayList<>();
 		this.enrolledStudents = new ArrayList<Student>();
 		this.schedules = schedules;
+		this.midtermScores = new HashMap<>();
+		this.finalScores = new HashMap<>();
 	}
 
 	public boolean addStudent(Student student) {
@@ -47,6 +58,8 @@ public class ClassSection {
 		} else {
 			enrolledStudents.add(student);
 			student.addEnrolledClass(classSectionId);
+			midtermScores.put(student.studentId, 0f);
+			finalScores.put(student.studentId, 0f);
 			try {
 				List<Student> all = new ArrayList<>();
 				all.addAll(Main.creditStudents);
@@ -69,6 +82,8 @@ public class ClassSection {
 
 		enrolledStudents.remove(student);
 		student.removeEnrolledClass(classSectionId);
+		midtermScores.remove(student.studentId);
+		finalScores.remove(student.studentId);
 		try {
 			List<Student> all = new ArrayList<>();
 			all.addAll(Main.creditStudents);
@@ -128,5 +143,25 @@ public class ClassSection {
 
 	public void removeLecturer(String lecturerId) {
 		lecturerIds.remove(lecturerId);
+	}
+
+	/** Returns the midterm score for the given student ID, or 0 if missing */
+	public float getMidtermScore(String studentId) {
+		return midtermScores.getOrDefault(studentId, 0f);
+	}
+
+	/** Returns the final exam score for the given student ID, or 0 if missing */
+	public float getFinalScore(String studentId) {
+		return finalScores.getOrDefault(studentId, 0f);
+	}
+
+	/** Sets the midterm score for the specified student */
+	public void setMidtermScore(String studentId, float score) {
+		midtermScores.put(studentId, score);
+	}
+
+	/** Sets the final exam score for the specified student */
+	public void setFinalScore(String studentId, float score) {
+		finalScores.put(studentId, score);
 	}
 }

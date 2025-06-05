@@ -27,13 +27,16 @@ public class LecturerPanel extends JFrame {
 
         JButton assignButton = new JButton("Assign Class Section");
         JButton viewButton = new JButton("View Assigned Classes");
+        JButton gradeButton = new JButton("Grade Students");
 
         assignButton.addActionListener(e -> showAssignDialog());
         viewButton.addActionListener(e -> showAssignedDialog());
+        gradeButton.addActionListener(e -> showGradeDialog());
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(assignButton);
         buttonPanel.add(viewButton);
+        buttonPanel.add(gradeButton);
 
         add(infoPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
@@ -81,6 +84,70 @@ public class LecturerPanel extends JFrame {
         dialog.add(assignBtn, BorderLayout.SOUTH);
 
         dialog.setVisible(true);
+    }
+
+    /** Dialog for entering grades */
+    private void showGradeDialog() {
+        JDialog dialog = new JDialog(this, "Enter Grades", true);
+        dialog.setSize(600, 400);
+
+        JComboBox<String> classCombo = new JComboBox<>();
+        for (String id : lecturer.getAssignedClassIds()) {
+            classCombo.addItem(id);
+        }
+
+        String[] columns = {"Student ID", "Full Name", "Midterm", "Final"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        JTable table = new JTable(model);
+
+        classCombo.addActionListener(e -> refreshGradeTable(model, (String) classCombo.getSelectedItem()));
+
+        if (classCombo.getItemCount() > 0) {
+            refreshGradeTable(model, (String) classCombo.getItemAt(0));
+        }
+
+        JButton saveBtn = new JButton("Save");
+        saveBtn.addActionListener(e -> {
+            String classId = (String) classCombo.getSelectedItem();
+            ClassSection cs = Manager.classSections.stream()
+                    .filter(c -> c.classSectionId.equals(classId))
+                    .findFirst()
+                    .orElse(null);
+            if (cs != null) {
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    String sid = (String) model.getValueAt(i, 0);
+                    float mid = Float.parseFloat(model.getValueAt(i, 2).toString());
+                    float fin = Float.parseFloat(model.getValueAt(i, 3).toString());
+                    cs.setMidtermScore(sid, mid);
+                    cs.setFinalScore(sid, fin);
+                }
+                JOptionPane.showMessageDialog(dialog, "Scores saved");
+            }
+        });
+
+        JPanel top = new JPanel(new BorderLayout());
+        top.add(new JLabel("Class:"), BorderLayout.WEST);
+        top.add(classCombo, BorderLayout.CENTER);
+
+        dialog.add(top, BorderLayout.NORTH);
+        dialog.add(new JScrollPane(table), BorderLayout.CENTER);
+        dialog.add(saveBtn, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
+    }
+
+    private void refreshGradeTable(DefaultTableModel model, String classId) {
+        model.setRowCount(0);
+        ClassSection cs = Manager.classSections.stream()
+                .filter(c -> c.classSectionId.equals(classId))
+                .findFirst()
+                .orElse(null);
+        if (cs != null) {
+            for (Student s : cs.enrolledStudents) {
+                model.addRow(new Object[]{s.studentId, s.getFullName(),
+                        cs.getMidtermScore(s.studentId), cs.getFinalScore(s.studentId)});
+            }
+        }
     }
 
     private void showAssignedDialog() {
