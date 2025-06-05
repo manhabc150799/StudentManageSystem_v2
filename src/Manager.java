@@ -276,7 +276,7 @@ class ManagerPanel extends JFrame {
 
 
     	//Initital
-    	String[] column2Names = {"STT", "Mã lớp", "Mã môn học", "Tên môn học", "Thời khóa biểu", "SL tối đa", "SL đăng ký"};
+    	String[] column2Names = {"STT", "Mã lớp", "Mã môn học", "Tên môn học", "Thời khóa biểu", "SL tối đa", "Giảng viên"};
         classSectionTableModel = new DefaultTableModel(column2Names, 0);
         classSectionTable = new JTable(classSectionTableModel);
         classSectionPanel.add(new JScrollPane(classSectionTable), BorderLayout.CENTER);
