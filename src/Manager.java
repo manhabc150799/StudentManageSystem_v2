@@ -276,7 +276,7 @@ class ManagerPanel extends JFrame {
 
 
     	//Initital
-    	String[] column2Names = {"STT", "Mã lớp", "Mã môn học", "Tên môn học", "Thời khóa biểu", "SL tối đa", "Giảng viên"};
+    	String[] column2Names = {"STT", "Mã lớp", "Mã môn học", "Tên môn học", "Thời khóa biểu", "SL tối đa", "SL Đăng ký", "Giảng viên"};
         classSectionTableModel = new DefaultTableModel(column2Names, 0);
         classSectionTable = new JTable(classSectionTableModel);
         classSectionPanel.add(new JScrollPane(classSectionTable), BorderLayout.CENTER);
@@ -575,6 +575,18 @@ class ManagerPanel extends JFrame {
                 String scheduleText = getScheduleText(classSection.schedules); // Function to format schedule
                 int maxCapacity = classSection.maxCapacity;
                 int enrolledCount = classSection.enrolledStudents.size();
+				String lecturerName = classSection.lecturer;
+				if (lecturerName != null && !lecturerName.isBlank()) {
+					Lecturer lecturer = Main.lecturers.stream()
+							.filter(l -> l.getLecturerId().equalsIgnoreCase(classSection.lecturer))
+							.findFirst()
+							.orElse(null);
+					if (lecturer != null) {
+						lecturerName = lecturer.getFullName();
+					}
+				} else {
+					lecturerName = "";
+				}
 
                 // Add a row to the model
                 classSectionTableModel.addRow(new Object[]{
@@ -584,7 +596,8 @@ class ManagerPanel extends JFrame {
                         subjectName,
                         scheduleText,
                         maxCapacity,
-                        enrolledCount
+                        enrolledCount,
+						lecturerName
                 });
             }
 
