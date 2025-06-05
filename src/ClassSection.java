@@ -66,6 +66,7 @@ public class ClassSection {
 				all.addAll(Main.yearBasedStudents);
 				ExcelUtil.writeStudentsToExcel(all, Manager.STUDENT_EXCEL_PATH);
 				ExcelUtil.writeClassSectionsToExcel(Manager.classSections, Manager.CLASS_SECTION_EXCEL_PATH);
+				ExcelUtil.writeGradesToExcel(this, Manager.GRADE_DIR_PATH);
 			} catch (IOException ex) {
 				System.err.println("Failed to save enrollment: " + ex.getMessage());
 			}
@@ -90,6 +91,7 @@ public class ClassSection {
 			all.addAll(Main.yearBasedStudents);
 			ExcelUtil.writeStudentsToExcel(all, Manager.STUDENT_EXCEL_PATH);
 			ExcelUtil.writeClassSectionsToExcel(Manager.classSections, Manager.CLASS_SECTION_EXCEL_PATH);
+			ExcelUtil.writeGradesToExcel(this, Manager.GRADE_DIR_PATH);
 		} catch (IOException ex) {
 			System.err.println("Failed to save enrollment: " + ex.getMessage());
 		}
@@ -163,5 +165,15 @@ public class ClassSection {
 	/** Sets the final exam score for the specified student */
 	public void setFinalScore(String studentId, float score) {
 		finalScores.put(studentId, score);
+	}
+
+	/** Calculates the CPA for the specified student using subject weights if available */
+	public float calculateCPA(String studentId) {
+		float mid = getMidtermScore(studentId);
+		float fin = getFinalScore(studentId);
+		if (subject instanceof CreditSubject credit) {
+			return (mid * credit.midtermWeight + fin * credit.finalExamWeight) / 100f;
+		}
+		return (mid + fin) / 2f;
 	}
 }

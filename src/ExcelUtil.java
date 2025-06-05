@@ -335,4 +335,52 @@ public class ExcelUtil {
 
         return lecturers;
     }
+
+    /** Writes grades for the given class section to an Excel file within the specified directory. */
+    public static void writeGradesToExcel(ClassSection cs, String dirPath) throws IOException {
+        File dir = new File(dirPath);
+        dir.mkdirs();
+        File file = new File(dir, cs.classSectionId + "_grades.xlsx");
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Grades");
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("Student ID");
+        header.createCell(1).setCellValue("Midterm");
+        header.createCell(2).setCellValue("Final");
+
+        int rowNum = 1;
+        for (Student s : cs.enrolledStudents) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(s.studentId);
+            row.createCell(1).setCellValue(cs.getMidtermScore(s.studentId));
+            row.createCell(2).setCellValue(cs.getFinalScore(s.studentId));
+        }
+
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            workbook.write(fos);
+        }
+        workbook.close();
+    }
+
+    /** Loads grades from Excel into the provided class section if a file exists. */
+    public static void readGradesFromExcel(ClassSection cs, String dirPath) throws IOException {
+        File file = new File(dirPath, cs.classSectionId + "_grades.xlsx");
+        if (!file.exists()) {
+            return;
+        }
+
+        try (FileInputStream fis = new FileInputStream(file); Workbook workbook = new XSSFWorkbook(fis)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                String sid = row.getCell(0).getStringCellValue();
+                float mid = (float) row.getCell(1).getNumericCellValue();
+                float fin = (float) row.getCell(2).getNumericCellValue();
+                cs.setMidtermScore(sid, mid);
+                cs.setFinalScore(sid, fin);
+            }
+        }
+    }
 }

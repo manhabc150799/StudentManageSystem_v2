@@ -32,15 +32,20 @@ public class Manager extends User {
 
 	public static List<ClassSection> classSections;
 
-	/** Path to the exported Excel file in the user's Downloads directory */
+
 	public static final String CLASS_SECTION_EXCEL_PATH =
 			System.getProperty("user.home") + File.separator +
 					"Downloads" + File.separator + "ClassSections.xlsx";
 
-	/** Path to export the student list */
+	//** Path to export the student list */
 	public static final String STUDENT_EXCEL_PATH =
 			System.getProperty("user.home") + File.separator +
 					"Downloads" + File.separator + "Students.xlsx";
+
+	/** Directory where class grade spreadsheets are stored */
+	public static final String GRADE_DIR_PATH =
+			System.getProperty("user.home") + File.separator +
+					"Downloads" + File.separator + "Grades";
 
 
 	public Manager(String userId, String email, String password,String fullName, String role, boolean status, String dob,
@@ -70,6 +75,11 @@ public class Manager extends User {
 						cs.enrolledStudents.add(s);
 					}
 				}
+			}
+
+			// load grades for each class section if available
+			for (ClassSection cs : Manager.classSections) {
+				ExcelUtil.readGradesFromExcel(cs, GRADE_DIR_PATH);
 			}
 
 			ExcelUtil.writeStudentsToExcel(this.students, STUDENT_EXCEL_PATH);
