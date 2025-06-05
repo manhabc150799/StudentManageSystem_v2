@@ -235,10 +235,12 @@ class ManagerPanel extends JFrame {
         JButton viewClassSectionButton = new JButton("Class Section");
         JButton addClassSectionButton = new JButton("Add Class Section");
 		JButton addStudentButton = new JButton("Add Student");
+		JButton addLecturerButton = new JButton("Add Lecturer");
         menuPanel.add(viewStudentsButton);
         menuPanel.add(viewClassSectionButton);
         menuPanel.add(addClassSectionButton);
 		menuPanel.add(addStudentButton);
+		menuPanel.add(addLecturerButton);
 
         mainPanel.add(menuPanel, BorderLayout.NORTH);
 
@@ -307,6 +309,9 @@ class ManagerPanel extends JFrame {
         });
 		addStudentButton.addActionListener(e -> {
 			showAddStudentDialog(manager);
+		});
+		addLecturerButton.addActionListener(e -> {
+			showAddLecturerDialog();
 		});
 
 
@@ -523,6 +528,70 @@ class ManagerPanel extends JFrame {
 		studentDialog.add(majorLabel);     studentDialog.add(majorField);
 		studentDialog.add(new JLabel());   studentDialog.add(submitButton);
 		studentDialog.setVisible(true);
+	}
+
+	private void showAddLecturerDialog() {
+		JDialog lecturerDialog = new JDialog(this, "Add Lecturer", ModalityType.MODELESS);
+		lecturerDialog.setSize(400, 400);
+		lecturerDialog.setLayout(new GridLayout(0, 2));
+
+		JLabel userIdLabel = new JLabel("User ID:");
+		JTextField userIdField = new JTextField();
+		JLabel emailLabel = new JLabel("Email:");
+		JTextField emailField = new JTextField();
+		JLabel passwordLabel = new JLabel("Password:");
+		JTextField passwordField = new JTextField();
+		JLabel nameLabel = new JLabel("Full Name:");
+		JTextField nameField = new JTextField();
+		JCheckBox statusCheckBox = new JCheckBox("Active");
+		statusCheckBox.setSelected(true);
+		JLabel dobLabel = new JLabel("DOB (yyyy-mm-dd):");
+		JTextField dobField = new JTextField();
+		JLabel lecturerIdLabel = new JLabel("Lecturer ID:");
+		JTextField lecturerIdField = new JTextField();
+		JLabel deptLabel = new JLabel("Department:");
+		JTextField deptField = new JTextField();
+
+		JButton submitButton = new JButton("Submit");
+		submitButton.addActionListener(e -> {
+			String userId = userIdField.getText().trim();
+			String email = emailField.getText().trim();
+			String password = passwordField.getText().trim();
+			String fullName = nameField.getText().trim();
+			boolean status = statusCheckBox.isSelected();
+			String dob = dobField.getText().trim();
+			String lecturerId = lecturerIdField.getText().trim();
+			String dept = deptField.getText().trim();
+
+			if (userId.isEmpty() || email.isEmpty() || password.isEmpty() ||
+					fullName.isEmpty() || lecturerId.isEmpty() || dept.isEmpty() || dob.isEmpty()) {
+				JOptionPane.showMessageDialog(lecturerDialog, "All fields are required!");
+				return;
+			}
+
+			Lecturer newLecturer = new Lecturer(userId, email, password, fullName,
+					"Lecturer", status, dob, lecturerId, dept);
+			Main.lecturers.add(newLecturer);
+			try {
+				ExcelUtil.writeLecturersToExcel(Main.lecturers, Main.LECTURER_EXCEL_PATH);
+			} catch (IOException ex) {
+				System.err.println("Failed to save to Excel: " + ex.getMessage());
+			}
+			JOptionPane.showMessageDialog(lecturerDialog, "Lecturer added successfully!");
+			lecturerDialog.dispose();
+		});
+
+		lecturerDialog.add(userIdLabel);    lecturerDialog.add(userIdField);
+		lecturerDialog.add(emailLabel);     lecturerDialog.add(emailField);
+		lecturerDialog.add(passwordLabel);  lecturerDialog.add(passwordField);
+		lecturerDialog.add(nameLabel);      lecturerDialog.add(nameField);
+		lecturerDialog.add(new JLabel("Status:")); lecturerDialog.add(statusCheckBox);
+		lecturerDialog.add(dobLabel);       lecturerDialog.add(dobField);
+		lecturerDialog.add(lecturerIdLabel); lecturerDialog.add(lecturerIdField);
+		lecturerDialog.add(deptLabel);      lecturerDialog.add(deptField);
+		lecturerDialog.add(new JLabel());   lecturerDialog.add(submitButton);
+
+		lecturerDialog.setVisible(true);
 	}
 
 
