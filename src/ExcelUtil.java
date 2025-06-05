@@ -348,6 +348,7 @@ public class ExcelUtil {
         header.createCell(0).setCellValue("Student ID");
         header.createCell(1).setCellValue("Midterm");
         header.createCell(2).setCellValue("Final");
+        header.createCell(3).setCellValue("CPA");
 
         int rowNum = 1;
         for (Student s : cs.enrolledStudents) {
@@ -355,6 +356,7 @@ public class ExcelUtil {
             row.createCell(0).setCellValue(s.studentId);
             row.createCell(1).setCellValue(cs.getMidtermScore(s.studentId));
             row.createCell(2).setCellValue(cs.getFinalScore(s.studentId));
+            row.createCell(3).setCellValue(cs.calculateCPA(s.studentId));
         }
 
         try (FileOutputStream fos = new FileOutputStream(file)) {

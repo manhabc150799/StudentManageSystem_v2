@@ -64,7 +64,8 @@ public class CreditStudent extends Student {
 
         for (EnrolledCreditSubject subject : enrolledCreditSubjects) {
             if (subject.isPassed()) {
-                totalScore += subject.calculateTotalScore() * subject.subject.creditHours;
+				double cpa4 = subject.calculateTotalScore() * 4.0 / 10.0;
+				totalScore += cpa4 * subject.subject.creditHours;
                 totalCredits += subject.subject.creditHours;
             }
         }

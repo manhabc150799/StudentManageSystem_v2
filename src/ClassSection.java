@@ -167,13 +167,22 @@ public class ClassSection {
 		finalScores.put(studentId, score);
 	}
 
-	/** Calculates the CPA for the specified student using subject weights if available */
+	/**
+	 * Calculates the CPA on a 4.0 scale for the specified student. The
+	 * midterm and final exam scores are weighted using the subject's weight
+	 * percentages and then converted from a 10 point scale to a 4 point
+	 * scale.
+	 */
 	public float calculateCPA(String studentId) {
 		float mid = getMidtermScore(studentId);
 		float fin = getFinalScore(studentId);
+		float total10;
 		if (subject instanceof CreditSubject credit) {
-			return (mid * credit.midtermWeight + fin * credit.finalExamWeight) / 100f;
+			total10 = (mid * credit.midtermWeight + fin * credit.finalExamWeight) / 100f;
+		} else {
+			total10 = (mid + fin) / 2f;
 		}
-		return (mid + fin) / 2f;
+		// convert from 10 point scale to 4 point scale
+		return total10 * 4f / 10f;
 	}
 }

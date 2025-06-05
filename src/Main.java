@@ -44,8 +44,11 @@ public class Main {
                    String responsibleDepartment = row.getCell(5).getStringCellValue();
                    String description = row.getCell(6).getStringCellValue();
                    int suggestSemester = (int) row.getCell(7).getNumericCellValue();
-                   int midtermWeight = (int) row.getCell(8).getNumericCellValue();
-                   int finalWeight = (int) row.getCell(9).getNumericCellValue();
+
+                   double midtermWeightVal = row.getCell(8).getNumericCellValue();
+                   double finalWeightVal = row.getCell(9).getNumericCellValue();
+                   int midtermWeight = midtermWeightVal <= 1 ? (int) Math.round(midtermWeightVal * 100) : (int) Math.round(midtermWeightVal);
+                   int finalWeight = finalWeightVal <= 1 ? (int) Math.round(finalWeightVal * 100) : (int) Math.round(finalWeightVal);
 
                    // Xử lý danh sách môn học tiên quyết
                    ArrayList<Subject> prerequisitecreditSubjects = new ArrayList<Subject>();

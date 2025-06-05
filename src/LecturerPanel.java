@@ -1,5 +1,6 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.io.IOException;
 import java.util.List;
@@ -145,6 +146,30 @@ public class LecturerPanel extends JFrame {
         String[] columns = {"Student ID", "Full Name", "Midterm", "Final", "CPA"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         JTable table = new JTable(model);
+        // automatically recalculate CPA when scores are edited
+        model.addTableModelListener(e -> {
+            int row = e.getFirstRow();
+            int column = e.getColumn();
+            if (row >= 0 && (column == 2 || column == 3)) {
+                String classId = (String) classCombo.getSelectedItem();
+                ClassSection cs = Manager.classSections.stream()
+                        .filter(c -> c.classSectionId.equals(classId))
+                        .findFirst()
+                        .orElse(null);
+                if (cs != null) {
+                    try {
+                        String sid = (String) model.getValueAt(row, 0);
+                        float mid = Float.parseFloat(model.getValueAt(row, 2).toString());
+                        float fin = Float.parseFloat(model.getValueAt(row, 3).toString());
+                        cs.setMidtermScore(sid, mid);
+                        cs.setFinalScore(sid, fin);
+                        model.setValueAt(cs.calculateCPA(sid), row, 4);
+                    } catch (NumberFormatException ex) {
+                        // ignore invalid input
+                    }
+                }
+            }
+        });
 
         classCombo.addActionListener(e -> refreshGradeTable(model, (String) classCombo.getSelectedItem()));
 
@@ -154,6 +179,13 @@ public class LecturerPanel extends JFrame {
 
         JButton saveBtn = new JButton("Save");
         saveBtn.addActionListener(e -> {
+            // ensure any in-progress cell edits are committed before reading
+            if (table.isEditing()) {
+                TableCellEditor editor = table.getCellEditor();
+                if (editor != null) {
+                    editor.stopCellEditing();
+                }
+            }
             String classId = (String) classCombo.getSelectedItem();
             ClassSection cs = Manager.classSections.stream()
                     .filter(c -> c.classSectionId.equals(classId))
