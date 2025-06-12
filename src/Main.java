@@ -155,7 +155,7 @@ public class Main {
                     // Hiển thị màn hình chính
                     switch (user.getRole().toLowerCase()) {
                         case "manager":
-                            SwingUtilities.invokeLater(() -> new ManagerPanel((Manager) user));
+                            SwingUtilities.invokeLater(() -> new Manager.ManagerPanel((Manager) user));
                             break;
                         case "lecturer":
                             SwingUtilities.invokeLater(() -> new LecturerPanel((Lecturer) user));

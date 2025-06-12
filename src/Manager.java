@@ -242,7 +242,7 @@ public class Manager extends User {
 	}
 
 
-	class ManagerPanel extends JFrame {
+	public static class ManagerPanel extends JFrame {
 		private static final long serialVersionUID = 1L;
 		/**
 		 * The manager instance backing this UI
@@ -392,7 +392,7 @@ public class Manager extends User {
 			List<Schedule> schedules = new ArrayList<>();
 
 			// Populate subjectComboBox with available subjects
-			for (Subject subject : getAvailableSubjects()) {
+			for (Subject subject : manager.getAvailableSubjects()) {
 				subjectComboBox.addItem(subject.subjectName);
 				requirementComboBox.addItem(subject.subjectName);
 			}
@@ -457,9 +457,9 @@ public class Manager extends User {
 				int maxLecturers = Integer.parseInt(lecturerField.getText());
 				int maxStudents = Integer.parseInt(maxStudentsField.getText());
 				String reqName = (String) requirementComboBox.getSelectedItem();
-				Subject reqSubject = "None".equals(reqName) ? null : findSubjectByName(reqName);
+				Subject reqSubject = "None".equals(reqName) ? null : manager.findSubjectByName(reqName);
 
-				Subject selectedSubject = findSubjectByName(subjectName);
+				Subject selectedSubject = manager.findSubjectByName(subjectName);
 				if (selectedSubject == null) {
 					JOptionPane.showMessageDialog(classSectionDialog, "Invalid Subject Name!");
 					return;
@@ -800,7 +800,7 @@ public class Manager extends User {
 			}
 		}
 
-	}
 
+	}
 }
 
