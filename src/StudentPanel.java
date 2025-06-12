@@ -35,11 +35,14 @@ public class StudentPanel extends JFrame {
         JButton enrollButton = new JButton("Enroll Class Section");
         JButton viewButton = new JButton("View Class Enrolled");
 
-        enrollButton.addActionListener(e -> showEnrollDialog());
-        viewButton.addActionListener(e -> showEnrolledDialog());
 
         JPanel buttonPanel = new JPanel();
-        buttonPanel.add(enrollButton);
+        if (!(student instanceof YearBasedStudent)) {
+            enrollButton.addActionListener(e -> showEnrollDialog());
+            buttonPanel.add(enrollButton);
+        }
+
+        viewButton.addActionListener(e -> showEnrolledDialog());
         buttonPanel.add(viewButton);
 
         add(infoPanel, BorderLayout.CENTER);
@@ -111,26 +114,28 @@ public class StudentPanel extends JFrame {
         }
         JTable table = new JTable(model);
         dialog.add(new JScrollPane(table));
-        JButton removeBtn = new JButton("Remove");
-        removeBtn.addActionListener(e -> {
-            int row = table.getSelectedRow();
-            if (row >= 0) {
-                String classId = (String) model.getValueAt(row, 0);
-                ClassSection cs = Manager.classSections.stream()
-                        .filter(c -> c.classSectionId.equals(classId))
-                        .findFirst()
-                        .orElse(null);
-                if (cs != null) {
-                    boolean ok = cs.removeStudent(student);
-                    JOptionPane.showMessageDialog(dialog,
-                            ok ? "Removed successfully" : "Could not remove");
-                    if (ok) {
-                        model.removeRow(row);
+        if (!(student instanceof YearBasedStudent)) {
+            JButton removeBtn = new JButton("Remove");
+            removeBtn.addActionListener(e -> {
+                int row = table.getSelectedRow();
+                if (row >= 0) {
+                    String classId = (String) model.getValueAt(row, 0);
+                    ClassSection cs = Manager.classSections.stream()
+                            .filter(c -> c.classSectionId.equals(classId))
+                            .findFirst()
+                            .orElse(null);
+                    if (cs != null) {
+                        boolean ok = cs.removeStudent(student);
+                        JOptionPane.showMessageDialog(dialog,
+                                ok ? "Removed successfully" : "Could not remove");
+                        if (ok) {
+                            model.removeRow(row);
+                        }
                     }
                 }
-            }
-        });
-        dialog.add(removeBtn, BorderLayout.SOUTH);
+            });
+            dialog.add(removeBtn, BorderLayout.SOUTH);
+        }
 
 
         dialog.setVisible(true);
