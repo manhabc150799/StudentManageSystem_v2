@@ -321,9 +321,48 @@ public class Manager extends User {
 
 
 			//Initital
-			String[] column2Names = {"STT", "Mã lớp", "Mã môn học", "Tên môn học", "Yêu cầu", "Thời khóa biểu", "SL tối đa", "SL Đăng ký", "Giảng viên"};
-			classSectionTableModel = new DefaultTableModel(column2Names, 0);
+			String[] column2Names = {"STT", "Mã lớp", "Mã môn học", "Tên môn học", "Yêu cầu", "Thời khóa biểu", "SL tối đa", "SL Đăng ký", "Giảng viên", "Year Based"};
+			classSectionTableModel = new DefaultTableModel(column2Names, 0) {
+				private static final long serialVersionUID = 1L;
+				@Override
+				public boolean isCellEditable(int row, int column) {
+					return column == 9;
+				}
+
+				@Override
+				public Class<?> getColumnClass(int columnIndex) {
+					if (columnIndex == 9) return Boolean.class;
+					return String.class;
+				}
+			};
 			classSectionTable = new JTable(classSectionTableModel);
+			classSectionTableModel.addTableModelListener(e -> {
+				int row = e.getFirstRow();
+				int col = e.getColumn();
+				if (col == 9 && row >= 0) {
+					ClassSection cs = Manager.classSections.get(row);
+					boolean selected = (Boolean) classSectionTableModel.getValueAt(row, 9);
+					if (selected && !cs.yearBasedAuto) {
+						for (YearBasedStudent ybs : Main.yearBasedStudents) {
+							cs.addStudent(ybs);
+						}
+						cs.yearBasedAuto = true;
+					} else if (!selected && cs.yearBasedAuto) {
+						java.util.List<Student> removeList = new java.util.ArrayList<>(cs.enrolledStudents);
+						for (Student s : removeList) {
+							if (s instanceof YearBasedStudent) {
+								cs.removeStudent(s);
+							}
+						}
+						cs.yearBasedAuto = false;
+					}
+					try {
+						ExcelUtil.writeClassSectionsToExcel(Manager.classSections, Manager.CLASS_SECTION_EXCEL_PATH);
+					} catch (Exception ex) {
+						System.err.println("Failed to update class section: " + ex.getMessage());
+					}
+				}
+			});
 			classSectionPanel.add(new JScrollPane(classSectionTable), BorderLayout.CENTER);
 
 			JButton refresh2Button = new JButton("Refresh");
@@ -390,6 +429,8 @@ public class Manager extends User {
 			JTextArea scheduleArea = new JTextArea(5, 20);
 			scheduleArea.setEditable(false);
 			List<Schedule> schedules = new ArrayList<>();
+
+			JCheckBox yearBasedCheck = new JCheckBox("Auto enroll year based students");
 
 			// Populate subjectComboBox with available subjects
 			for (Subject subject : manager.getAvailableSubjects()) {
@@ -475,6 +516,12 @@ public class Manager extends User {
 							classSectionId, selectedSubject, semester, maxLecturers, maxStudents, schedules,
 							reqSubject
 					);
+					newClassSection.yearBasedAuto = yearBasedCheck.isSelected();
+					if (newClassSection.yearBasedAuto) {
+						for (YearBasedStudent ybs : Main.yearBasedStudents) {
+							newClassSection.addStudent(ybs);
+						}
+					}
 					Manager.classSections.add(newClassSection);
 					try {
 						ExcelUtil.writeClassSectionsToExcel(Manager.classSections, Manager.CLASS_SECTION_EXCEL_PATH);

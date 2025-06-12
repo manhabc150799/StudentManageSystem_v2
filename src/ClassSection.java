@@ -34,6 +34,9 @@ public class ClassSection {
 	/** Stores final exam score by student ID */
 	public Map<String, Float> finalScores;
 
+	/** Indicates if all year based students should be automatically enrolled */
+	public boolean yearBasedAuto;
+
 	public ClassSection(String classSectionId, Subject subject, String semeter,
 						int maxLecturers, int maxCapacity, List<Schedule> schedules,
 						Subject requirement) {
@@ -48,6 +51,7 @@ public class ClassSection {
 		this.schedules = schedules;
 		this.midtermScores = new HashMap<>();
 		this.finalScores = new HashMap<>();
+		this.yearBasedAuto = false;
 	}
 
 	public boolean addStudent(Student student) {
@@ -168,6 +172,16 @@ public class ClassSection {
 
 	public void removeLecturer(String lecturerId) {
 		lecturerIds.remove(lecturerId);
+	}
+
+	/** Returns whether year based auto enrollment is enabled */
+	public boolean isYearBasedAuto() {
+		return yearBasedAuto;
+	}
+
+	/** Sets year based auto enrollment flag */
+	public void setYearBasedAuto(boolean value) {
+		yearBasedAuto = value;
 	}
 
 	/** Returns the midterm score for the given student ID, or 0 if missing */

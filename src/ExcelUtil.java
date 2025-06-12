@@ -28,6 +28,7 @@ public class ExcelUtil {
         header.createCell(7).setCellValue("Schedule");
         header.createCell(8).setCellValue("Current Enrollment");
         header.createCell(9).setCellValue("Requirement");
+        header.createCell(10).setCellValue("YearBasedAuto");
 
         int rowNum = 1;
         for (ClassSection cs : classSections) {
@@ -42,6 +43,7 @@ public class ExcelUtil {
             row.createCell(7).setCellValue(getScheduleText(cs.schedules));
             row.createCell(8).setCellValue(cs.enrolledStudents.size());
             row.createCell(9).setCellValue(cs.requirement == null ? "" : cs.requirement.subjectCode);
+            row.createCell(10).setCellValue(cs.yearBasedAuto);
         }
 
         File file = new File(filePath);
@@ -119,6 +121,9 @@ public class ExcelUtil {
 
                 ClassSection cs = new ClassSection(classSectionId, subject, semester,
                         maxLecturers, maxCapacity, schedules, requirement);
+                if (row.getLastCellNum() > 10 && row.getCell(10) != null) {
+                    cs.yearBasedAuto = row.getCell(10).getBooleanCellValue();
+                }
                 if (lecturerStr != null && !lecturerStr.isEmpty()) {
                     for (String id : lecturerStr.split(",")) {
                         cs.lecturerIds.add(id.trim());
