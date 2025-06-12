@@ -143,7 +143,7 @@ public class LecturerPanel extends JFrame {
             classCombo.addItem(id);
         }
 
-        String[] columns = {"Student ID", "Full Name", "Midterm", "Final", "CPA"};
+        String[] columns = {"Student ID", "Full Name", "Midterm", "Final", "CPA", "Result"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         JTable table = new JTable(model);
         // automatically recalculate CPA when scores are edited
@@ -164,6 +164,8 @@ public class LecturerPanel extends JFrame {
                         cs.setMidtermScore(sid, mid);
                         cs.setFinalScore(sid, fin);
                         model.setValueAt(cs.calculateCPA(sid), row, 4);
+                        String result = (mid < 3.0f || fin < 3.0f) ? "Fail" : "Pass";
+                        model.setValueAt(result, row, 5);
                     } catch (NumberFormatException ex) {
                         // ignore invalid input
                     }
@@ -199,6 +201,8 @@ public class LecturerPanel extends JFrame {
                     cs.setMidtermScore(sid, mid);
                     cs.setFinalScore(sid, fin);
                     model.setValueAt(cs.calculateCPA(sid), i, 4);
+                    String result = (mid < 3.0f || fin < 3.0f) ? "Fail" : "Pass";
+                    model.setValueAt(result, i, 5);
                 }
                 try {
                     ExcelUtil.writeGradesToExcel(cs, Manager.GRADE_DIR_PATH);
@@ -228,9 +232,11 @@ public class LecturerPanel extends JFrame {
                 .orElse(null);
         if (cs != null) {
             for (Student s : cs.enrolledStudents) {
-                model.addRow(new Object[]{s.studentId, s.getFullName(),
-                        cs.getMidtermScore(s.studentId), cs.getFinalScore(s.studentId),
-                        cs.calculateCPA(s.studentId)});
+                float mid = cs.getMidtermScore(s.studentId);
+                float fin = cs.getFinalScore(s.studentId);
+                String result = (mid < 3.0f || fin < 3.0f) ? "Fail" : "Pass";
+                model.addRow(new Object[]{s.studentId, s.getFullName(), mid, fin,
+                        cs.calculateCPA(s.studentId), result});
             }
         }
     }

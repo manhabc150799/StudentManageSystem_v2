@@ -77,6 +77,41 @@ public abstract class Student extends User {
 		return count == 0 ? 0.0 : total / count;
 	}
 
+	/**
+	 * Calculates the graduation progress of the student. Each passed class
+	 * contributes three points towards the required 120. A class is
+	 * considered passed when both the midterm and final scores are at least
+	 * 3.0. Failed classes contribute zero points.
+	 *
+	 * @return total graduation points accumulated
+	 */
+	public int calculateGraduationProgress() {
+		int passed = 0;
+		for (String id : enrolledClassIds) {
+			ClassSection cs = Manager.classSections.stream()
+					.filter(c -> c.classSectionId.equals(id))
+					.findFirst()
+					.orElse(null);
+			if (cs != null) {
+				if (cs.getMidtermScore(studentId) >= 3.0f && cs.getFinalScore(studentId) >= 3.0f) {
+					passed++;
+				}
+			}
+		}
+		return passed * 3;
+	}
+
+	/**
+	 * Determines whether the student has accumulated enough passed classes
+	 * to graduate. A total of 120 points (40 passed classes) is required.
+	 *
+	 * @return {@code true} if the student meets the requirement, otherwise
+	 *         {@code false}
+	 */
+	public boolean validateGraduation() {
+		return calculateGraduationProgress() >= 120;
+	}
+
 
 	public abstract void viewResult();
 

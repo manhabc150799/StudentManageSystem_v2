@@ -25,6 +25,10 @@ public class StudentPanel extends JFrame {
         infoPanel.add(new JLabel(student.major));
         infoPanel.add(new JLabel("Average CPA:"));
         infoPanel.add(new JLabel(String.format("%.2f", student.calculateAverageCPAFromClasses())));
+        infoPanel.add(new JLabel("Validate Graduation:"));
+        infoPanel.add(new JLabel(student.calculateGraduationProgress() + " / 120"));
+        infoPanel.add(new JLabel("Eligible:"));
+        infoPanel.add(new JLabel(student.validateGraduation() ? "Yes" : "No"));
         infoPanel.add(new JLabel("Role:"));
         infoPanel.add(new JLabel(student.getRole()));
 
