@@ -52,12 +52,13 @@ public class StudentPanel extends JFrame {
         JDialog dialog = new JDialog(this, "Enroll Class Section", true);
         dialog.setSize(500, 300);
 
-        String[] columnNames = {"Class ID", "Subject", "Schedule", "Enrolled/Max"};
+        String[] columnNames = {"Class ID", "Subject", "Requirement", "Schedule", "Enrolled/Max"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
         for (ClassSection cs : Manager.classSections) {
             String scheduleText = getScheduleText(cs.schedules);
             String status = cs.enrolledStudents.size() + "/" + cs.maxCapacity;
-            model.addRow(new Object[]{cs.classSectionId, cs.subject.subjectName, scheduleText, status});
+            String req = cs.requirement == null ? "" : cs.requirement.subjectName;
+            model.addRow(new Object[]{cs.classSectionId, cs.subject.subjectName, req, scheduleText, status});
         }
         JTable table = new JTable(model);
         dialog.add(new JScrollPane(table), BorderLayout.CENTER);
@@ -68,11 +69,23 @@ public class StudentPanel extends JFrame {
             if (row >= 0) {
                 ClassSection cs = Manager.classSections.get(row);
                 boolean ok = cs.addStudent(student);
-                JOptionPane.showMessageDialog(dialog,
-                        ok ? "Enrolled successfully" : "Could not enroll");
                 if (ok) {
-                    model.setValueAt(cs.enrolledStudents.size() + "/" + cs.maxCapacity, row, 3);
+                    JOptionPane.showMessageDialog(dialog, "Enrolled successfully");
+                    model.setValueAt(cs.enrolledStudents.size() + "/" + cs.maxCapacity, row, 4);
+                } else {
+                    String msg;
+                    if (cs.enrolledStudents.size() >= cs.maxCapacity) {
+                        msg = "Class is full";
+                    } else if (cs.enrolledStudents.contains(student)) {
+                        msg = "Already enrolled";
+                    } else if (!cs.isStudentEligible(student)) {
+                        msg = "Requirement not met";
+                    } else {
+                        msg = "Could not enroll";
+                    }
+                    JOptionPane.showMessageDialog(dialog, msg);
                 }
+
             }
         });
         dialog.add(enrollBtn, BorderLayout.SOUTH);

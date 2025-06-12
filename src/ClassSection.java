@@ -11,7 +11,10 @@ public class ClassSection {
 	public String classSectionId;
 
 	public Subject subject;
-	
+
+	/** Optional prerequisite subject required before enrollment */
+	public Subject requirement;
+
 	public String semeter;
 
 	public int maxLecturers;
@@ -32,9 +35,11 @@ public class ClassSection {
 	public Map<String, Float> finalScores;
 
 	public ClassSection(String classSectionId, Subject subject, String semeter,
-						int maxLecturers, int maxCapacity, List<Schedule> schedules) {
+						int maxLecturers, int maxCapacity, List<Schedule> schedules,
+						Subject requirement) {
 		this.classSectionId = classSectionId;
 		this.subject = subject;
+		this.requirement = requirement;
 		this.semeter = semeter;
 		this.maxLecturers = maxLecturers;
 		this.maxCapacity = maxCapacity;
@@ -99,7 +104,21 @@ public class ClassSection {
 	}
 
 	public boolean isStudentEligible(Student student) {
-		return true;
+		if (requirement == null) {
+			return true;
+		}
+		for (String id : student.getEnrolledClassIds()) {
+			ClassSection cs = Manager.classSections.stream()
+					.filter(c -> c.classSectionId.equals(id))
+					.findFirst()
+					.orElse(null);
+			if (cs != null && cs.subject.subjectCode.equalsIgnoreCase(requirement.subjectCode)) {
+				if (cs.getMidtermScore(student.studentId) >= 3.0f && cs.getFinalScore(student.studentId) >= 3.0f) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public String toString() {
@@ -115,6 +134,10 @@ public class ClassSection {
 	}
 	public Subject getSubject(){
 		return subject;
+	}
+
+	public Subject getRequirement() {
+		return requirement;
 	}
 	/**
 	 * Returns a comma separated list of lecturer IDs assigned to this class.

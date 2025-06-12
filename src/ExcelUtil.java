@@ -27,6 +27,7 @@ public class ExcelUtil {
         header.createCell(6).setCellValue("Max Capacity");
         header.createCell(7).setCellValue("Schedule");
         header.createCell(8).setCellValue("Current Enrollment");
+        header.createCell(9).setCellValue("Requirement");
 
         int rowNum = 1;
         for (ClassSection cs : classSections) {
@@ -40,6 +41,7 @@ public class ExcelUtil {
             row.createCell(6).setCellValue(cs.maxCapacity);
             row.createCell(7).setCellValue(getScheduleText(cs.schedules));
             row.createCell(8).setCellValue(cs.enrolledStudents.size());
+            row.createCell(9).setCellValue(cs.requirement == null ? "" : cs.requirement.subjectCode);
         }
 
         File file = new File(filePath);
@@ -97,10 +99,14 @@ public class ExcelUtil {
                 int maxLecturers;
                 int maxCapacity;
                 String scheduleText;
+                String requirementCode = "";
                 if (row.getLastCellNum() >= 8) {
                     maxLecturers = (int) row.getCell(5).getNumericCellValue();
                     maxCapacity = (int) row.getCell(6).getNumericCellValue();
                     scheduleText = row.getCell(7).getStringCellValue();
+                    if (row.getLastCellNum() > 9 && row.getCell(9) != null) {
+                        requirementCode = row.getCell(9).getStringCellValue();
+                    }
                 } else {
                     maxLecturers = 1;
                     maxCapacity = (int) row.getCell(5).getNumericCellValue();
@@ -108,10 +114,11 @@ public class ExcelUtil {
                 }
 
                 Subject subject = findSubject(subjectCode, subjectName);
+                Subject requirement = requirementCode.isEmpty() ? null : findSubject(requirementCode, requirementCode);
                 List<Schedule> schedules = parseScheduleText(scheduleText);
 
                 ClassSection cs = new ClassSection(classSectionId, subject, semester,
-                        maxLecturers, maxCapacity, schedules);
+                        maxLecturers, maxCapacity, schedules, requirement);
                 if (lecturerStr != null && !lecturerStr.isEmpty()) {
                     for (String id : lecturerStr.split(",")) {
                         cs.lecturerIds.add(id.trim());
